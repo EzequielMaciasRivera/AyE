@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "406441252087",
+    "project_id": "ayetasks",
+    "storage_bucket": "ayetasks.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:406441252087:android:48a7c4d143618c37906ff2",
+        "android_client_info": {
+          "package_name": "ezequiel.macias"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAT9V9QVJd1he-mf7q-y8NgvliugIZcjlU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
