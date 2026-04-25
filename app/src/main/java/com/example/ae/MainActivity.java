@@ -1,5 +1,6 @@
 package com.example.ae;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -12,10 +13,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 
 
 public class MainActivity extends AppCompatActivity {
+
     private FirebaseAuth mAuth;
     private EditText emailField, passwordField;
     private Button loginButton, registerButton;
@@ -26,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+        // ✅ Inicializar Firebase aquí
+        FirebaseApp.initializeApp(this);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -35,6 +41,13 @@ public class MainActivity extends AppCompatActivity {
 
         // Inicializar Firebase Auth
         mAuth = FirebaseAuth.getInstance();
+        // ✅ Si quieres saltar el login temporalmente:
+        if (true) { // pon una condición fija para pruebas
+            startActivity(new Intent(this, TasksActivity.class));
+            finish();
+            return;
+        }
+
 
         // Conectar los elementos del layout
         emailField = findViewById(R.id.emailField);

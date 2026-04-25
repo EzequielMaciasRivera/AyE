@@ -6,22 +6,28 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "tasks")
 public class Task {
     @PrimaryKey(autoGenerate = true)
-    public int id;
+    private int id;
 
-    public String title;
-    public boolean completed;
+    private String title;
 
-    // Constructor
-    public Task(String title, boolean completed) {
+    private boolean completed = false; // 🔹 valor por defecto
+
+    // Constructor vacío (Room lo usa internamente)
+    public Task() { }
+
+    // Constructor principal
+    public Task(String title) {
         this.title = title;
-        this.completed = completed;
+        this.completed = false; // 🔹 siempre inicia como pendiente
     }
 
     // Getters y Setters
     public int getId() { return id; }
-    public String getTitle() { return title; }
-    public boolean isCompleted() { return completed; }
+    public void setId(int id) { this.id = id; }
 
+    public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    public boolean isCompleted() { return completed; }
     public void setCompleted(boolean completed) { this.completed = completed; }
 }

@@ -4,7 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
+    android:layout_marginVertical="4dp"
+    android:layout_marginHorizontal="8dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp">
 
@@ -15,11 +16,14 @@
         android:padding="12dp"
         android:gravity="center_vertical">
 
-        <!-- CheckBox para estado -->
-        <CheckBox
-            android:id="@+id/taskCheckBox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+        <!-- Icono de palomita -->
+        <ImageView
+            android:id="@+id/checkIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_check_circle"
+            android:contentDescription="Tarea completada"
+            android:layout_marginEnd="8dp"/>
 
         <!-- Título de la tarea -->
         <TextView
@@ -27,7 +31,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
             android:text="Título de la tarea"
             android:textSize="18sp"
             android:textStyle="bold"/>
