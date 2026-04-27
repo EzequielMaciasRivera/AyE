@@ -17,7 +17,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class TasksActivity extends AppCompatActivity {
@@ -85,11 +89,42 @@ public class TasksActivity extends AppCompatActivity {
                             Task newTask = new Task(taskTitle);
                             taskDao.insert(newTask);
 
-                            Toast.makeText(this, "Tarea agregada correctamente", Toast.LENGTH_SHORT).show();
+
+                            LayoutInflater inflater = getLayoutInflater();
+                            View layout = inflater.inflate(R.layout.custom_toast, null);
+
+// Cambiar texto dinámicamente
+                            TextView text = layout.findViewById(R.id.toastText);
+                            text.setText("Tarea agregada correctamente");
+
+// Cambiar ícono dinámicamente
+                            ImageView icon = layout.findViewById(R.id.toastIcon);
+                            icon.setImageResource(R.drawable.enamorado); // tu drawable
+
+                            Toast toast = new Toast(getApplicationContext());
+                            toast.setDuration(Toast.LENGTH_SHORT);
+                            toast.setView(layout);
+                            toast.show();
                             // ❌ Ya no necesitas notifyDataSetChanged()
                             // ✅ LiveData refresca automáticamente los fragmentos
                         } else {
-                            Toast.makeText(this, "El título no puede estar vacío", Toast.LENGTH_SHORT).show();
+
+
+                            LayoutInflater inflater = getLayoutInflater();
+                            View layout = inflater.inflate(R.layout.custom_toast, null);
+
+// Cambiar texto dinámicamente
+                            TextView text = layout.findViewById(R.id.toastText);
+                            text.setText("El título no puede estar vacío");
+
+// Cambiar ícono dinámicamente
+                            ImageView icon = layout.findViewById(R.id.toastIcon);
+                            icon.setImageResource(R.drawable.no); // tu drawable
+
+                            Toast toast = new Toast(getApplicationContext());
+                            toast.setDuration(Toast.LENGTH_SHORT);
+                            toast.setView(layout);
+                            toast.show();
                         }
                     })
                     .setNegativeButton("Cancelar", null)

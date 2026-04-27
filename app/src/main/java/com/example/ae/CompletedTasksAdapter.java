@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,9 +46,24 @@ public class CompletedTasksAdapter extends RecyclerView.Adapter<CompletedTasksAd
                     .setMessage("¿Seguro que deseas eliminar esta tarea?")
                     .setPositiveButton("Sí", (dialog, which) -> {
                         taskDao.delete(task);
-                        taskList.remove(position);
-                        notifyItemRemoved(position);
-                        Toast.makeText(v.getContext(), "Tarea eliminada", Toast.LENGTH_SHORT).show();
+
+                        // Inflar el layout del Toast personalizado
+                        LayoutInflater inflater = LayoutInflater.from(v.getContext());
+                        View layout = inflater.inflate(R.layout.custom_toast, (ViewGroup) v.getRootView(), false);
+
+                        // Cambiar texto dinámicamente
+                        TextView text = layout.findViewById(R.id.toastText);
+                        text.setText("Tarea eliminada");
+
+                        // Cambiar ícono dinámicamente
+                        ImageView icon = layout.findViewById(R.id.toastIcon);
+                        icon.setImageResource(R.drawable.sorpresa); // tu drawable
+
+                        // Crear y mostrar el Toast
+                        Toast toast = new Toast(v.getContext());
+                        toast.setDuration(Toast.LENGTH_SHORT);
+                        toast.setView(layout);
+                        toast.show();
                     })
                     .setNegativeButton("Cancelar", null)
                     .show();
