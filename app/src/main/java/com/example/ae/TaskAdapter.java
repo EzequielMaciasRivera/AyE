@@ -46,9 +46,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         Task task = taskList.get(position);
 
         holder.taskTitle.setText(task.getTitle());
+
+        // 🔹 Desactivar listener antes de setChecked
+        holder.taskCheckBox.setOnCheckedChangeListener(null);
         holder.taskCheckBox.setChecked(task.isCompleted());
 
-        // Listener del CheckBox → solo actualizar en BD
+        // 🔹 Reactivar listener solo para cambios del usuario
         holder.taskCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             task.setCompleted(isChecked);
             taskDao.update(task);
