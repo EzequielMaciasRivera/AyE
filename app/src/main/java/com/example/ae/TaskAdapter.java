@@ -76,7 +76,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
                         // Cambiar ícono dinámicamente
                         ImageView icon = layout.findViewById(R.id.toastIcon);
-                        icon.setImageResource(R.drawable.flor); // tu drawable
+                        icon.setImageResource(R.drawable.sorpresa); // tu drawable
 
                         // Crear y mostrar el Toast
                         Toast toast = new Toast(v.getContext());

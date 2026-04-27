@@ -52,16 +52,16 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
-        android:id="@+id/tulipan"
-        android:layout_width="54dp"
-        android:layout_height="61dp"
+        android:id="@+id/mano"
+        android:layout_width="91dp"
+        android:layout_height="94dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="15dp"
-        android:contentDescription="tulipan"
-        android:src="@drawable/flor"
+        android:contentDescription="mano"
+        android:src="@drawable/mano"
         app:layout_constraintBottom_toTopOf="@+id/tabLayout"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.977"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
