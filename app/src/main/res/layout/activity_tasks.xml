@@ -6,41 +6,92 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Logo de la app -->
+    <ImageView
+        android:id="@+id/backgroundImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.5"
+        android:scaleType="centerCrop"
+        android:src="@drawable/tulipan" /> <!-- transparencia opcional -->
+
     <!-- Título principal -->
+
+    <!-- TabLayout para pestañas -->
+
+    <!-- ViewPager2 para contener los fragmentos -->
+
+    <ImageView
+        android:id="@+id/appIcon"
+        android:layout_width="91dp"
+        android:layout_height="61dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="15dp"
+        android:contentDescription="Logo de A&amp;E"
+        android:src="@drawable/iconotitle"
+        app:layout_constraintBottom_toTopOf="@+id/tabLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.761" />
+
     <TextView
         android:id="@+id/titleText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="297dp"
+        android:layout_height="61dp"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:padding="16dp"
         android:text="A&amp;E  Nuestras tareas"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:gravity="center"
-        android:padding="16dp"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.622"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- TabLayout para pestañas -->
+    <ImageView
+        android:id="@+id/tulipan"
+        android:layout_width="54dp"
+        android:layout_height="61dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="15dp"
+        android:contentDescription="tulipan"
+        android:src="@drawable/flor"
+        app:layout_constraintBottom_toTopOf="@+id/tabLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:tabIndicatorColor="@color/purple_500"
-        app:tabSelectedTextColor="@color/purple_500"
-        app:tabTextColor="@android:color/darker_gray"
-        app:layout_constraintTop_toBottomOf="@id/titleText"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/tab_background"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.468"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/titleText"
+        app:tabIndicatorColor="@color/textPinkSelected"
+        app:tabSelectedTextColor="@color/textPinkSelected"
+        app:tabTextColor="@color/white" />
 
-    <!-- ViewPager2 para contener los fragmentos -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/tabLayout"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tabLayout"
+        app:layout_constraintVertical_bias="1.0" />
 
     <!-- Botón flotante para agregar tarea -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
