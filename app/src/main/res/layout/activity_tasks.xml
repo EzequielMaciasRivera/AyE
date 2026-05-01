@@ -23,8 +23,8 @@
 
     <ImageView
         android:id="@+id/appIcon"
-        android:layout_width="91dp"
-        android:layout_height="61dp"
+        android:layout_width="113dp"
+        android:layout_height="74dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="15dp"
         android:contentDescription="Logo de A&amp;E"
@@ -34,27 +34,48 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.761" />
+        app:layout_constraintVertical_bias="1.0" />
 
     <TextView
         android:id="@+id/titleText"
-        android:layout_width="297dp"
-        android:layout_height="61dp"
-        android:layout_marginTop="12dp"
+        android:layout_width="249dp"
+        android:layout_height="79dp"
+        android:layout_marginTop="4dp"
+        android:ellipsize="none"
+        android:fontFamily="@font/elegante"
         android:gravity="center"
         android:padding="16dp"
-        android:text="A&amp;E  Nuestras tareas"
+        android:singleLine="false"
+        android:text="A&amp;E"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.622"
+        app:layout_constraintHorizontal_bias="0.487"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/titleText2"
+        android:layout_width="248dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:ellipsize="none"
+        android:fontFamily="@font/apollo"
+        android:gravity="center"
+        android:padding="16dp"
+        android:singleLine="false"
+        android:text="Nuestras tareas"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.435"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/mano"
-        android:layout_width="91dp"
-        android:layout_height="94dp"
+        android:layout_width="135dp"
+        android:layout_height="175dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="15dp"
         android:contentDescription="mano"
@@ -64,7 +85,7 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.418" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
