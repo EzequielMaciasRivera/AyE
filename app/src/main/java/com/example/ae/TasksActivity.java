@@ -1,5 +1,6 @@
 package com.example.ae;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -85,41 +86,39 @@ public class TasksActivity extends AppCompatActivity {
                         String taskTitle = input.getText().toString().trim();
 
                         if (!taskTitle.isEmpty()) {
-                            // Crear tarea pendiente
-                            Task newTask = new Task(taskTitle);
+                            // Recuperar nombre del usuario desde SharedPreferences
+                            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                            String userName = prefs.getString("userName", "desconocido");
+
+                            // Crear tarea con creador y fecha de creación
+                            Task newTask = new Task(taskTitle, userName);
                             taskDao.insert(newTask);
 
-
+                            // Toast personalizado
                             LayoutInflater inflater = getLayoutInflater();
                             View layout = inflater.inflate(R.layout.custom_toast, null);
 
-// Cambiar texto dinámicamente
                             TextView text = layout.findViewById(R.id.toastText);
-                            text.setText("Tarea agregada correctamente");
+                            text.setText("Tarea agregada por " + userName);
 
-// Cambiar ícono dinámicamente
                             ImageView icon = layout.findViewById(R.id.toastIcon);
-                            icon.setImageResource(R.drawable.enamorado); // tu drawable
+                            icon.setImageResource(R.drawable.enamorado);
 
                             Toast toast = new Toast(getApplicationContext());
                             toast.setDuration(Toast.LENGTH_SHORT);
                             toast.setView(layout);
                             toast.show();
-                            // ❌ Ya no necesitas notifyDataSetChanged()
-                            // ✅ LiveData refresca automáticamente los fragmentos
+
                         } else {
-
-
+                            // Toast de error
                             LayoutInflater inflater = getLayoutInflater();
                             View layout = inflater.inflate(R.layout.custom_toast, null);
 
-// Cambiar texto dinámicamente
                             TextView text = layout.findViewById(R.id.toastText);
                             text.setText("El título no puede estar vacío");
 
-// Cambiar ícono dinámicamente
                             ImageView icon = layout.findViewById(R.id.toastIcon);
-                            icon.setImageResource(R.drawable.no); // tu drawable
+                            icon.setImageResource(R.drawable.no);
 
                             Toast toast = new Toast(getApplicationContext());
                             toast.setDuration(Toast.LENGTH_SHORT);
