@@ -54,8 +54,39 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         // 🔹 Reactivar listener solo para cambios del usuario
         holder.taskCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            task.setCompleted(isChecked);
-            taskDao.update(task);
+            if (isChecked) {
+                // Crear el diálogo
+                AlertDialog dialog = new AlertDialog.Builder(buttonView.getContext())
+                        .setTitle("Confirmar")
+                        .setMessage("¿Seguro que quieres marcar esta tarea como completada?")
+                        .setPositiveButton("Sí", (d, which) -> {
+                            // Confirmar acción
+                            task.setCompleted(true);
+                            taskDao.update(task);
+
+                            Toast.makeText(buttonView.getContext(),
+                                    "Tarea marcada como completada",
+                                    Toast.LENGTH_SHORT).show();
+
+                            d.dismiss();
+                        })
+                        .setNegativeButton("No", (d, which) -> {
+                            // Cancelar → desmarcar el CheckBox
+                            holder.taskCheckBox.setChecked(false);
+                            d.dismiss();
+                        })
+                        .create();
+
+                // 🔹 Evitar que se cierre al tocar fuera
+                dialog.setCanceledOnTouchOutside(false);
+                dialog.setCancelable(false);
+
+                dialog.show();
+            } else {
+                // Si el usuario desmarca, actualizamos directamente
+                task.setCompleted(false);
+                taskDao.update(task);
+            }
         });
 
         // Botón eliminar → solo borrar en BD
