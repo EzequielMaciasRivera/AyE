@@ -1,10 +1,15 @@
 package com.example.ae;
 
-import android.content.Intent; // 🔹 Import necesario
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -36,29 +41,81 @@ public class MainActivity extends AppCompatActivity {
                             SharedPreferences.Editor editor = prefs.edit();
                             editor.putString("userName", nombre);
                             editor.apply();
-                            Toast.makeText(this, "Nombre guardado: " + nombre, Toast.LENGTH_SHORT).show();
+
+                            // 🔹 Toast personalizado
+                            View layout = LayoutInflater.from(this)
+                                    .inflate(R.layout.custom_toast, (ViewGroup) findViewById(android.R.id.content), false);
+
+                            TextView text = layout.findViewById(R.id.toastText);
+                            text.setText("Nombre guardado: " + nombre);
+
+                            ImageView icon = layout.findViewById(R.id.toastIcon);
+                            icon.setImageResource(R.drawable.enamorado); // usa tu drawable
+
+                            Toast toast = new Toast(this);
+                            toast.setDuration(Toast.LENGTH_SHORT);
+                            toast.setView(layout);
+                            toast.show();
 
                             // 🔹 Lanzar TasksActivity después de guardar
                             Intent intent = new Intent(MainActivity.this, TasksActivity.class);
                             startActivity(intent);
-                            finish(); // opcional, para que no regrese a MainActivity
+                            finish();
                         } else {
-                            Toast.makeText(this, "Debes escribir un nombre", Toast.LENGTH_SHORT).show();
+                            // 🔹 Toast de error personalizado
+                            View layout = LayoutInflater.from(this)
+                                    .inflate(R.layout.custom_toast, (ViewGroup) findViewById(android.R.id.content), false);
+
+                            TextView text = layout.findViewById(R.id.toastText);
+                            text.setText("Debes escribir un nombre");
+
+                            ImageView icon = layout.findViewById(R.id.toastIcon);
+                            icon.setImageResource(R.drawable.no);
+
+                            Toast toast = new Toast(this);
+                            toast.setDuration(Toast.LENGTH_SHORT);
+                            toast.setView(layout);
+                            toast.show();
                         }
                     })
                     .setNegativeButton("Cancelar", (dialog, which) -> {
-                        Toast.makeText(this, "No se configuró ningún nombre", Toast.LENGTH_SHORT).show();
+                        // 🔹 Toast personalizado al cancelar
+                        View layout = LayoutInflater.from(this)
+                                .inflate(R.layout.custom_toast, (ViewGroup) findViewById(android.R.id.content), false);
+
+                        TextView text = layout.findViewById(R.id.toastText);
+                        text.setText("No se configuró ningún nombre");
+
+                        ImageView icon = layout.findViewById(R.id.toastIcon);
+                        icon.setImageResource(R.drawable.sorpresa);
+
+                        Toast toast = new Toast(this);
+                        toast.setDuration(Toast.LENGTH_SHORT);
+                        toast.setView(layout);
+                        toast.show();
                     })
-                    .setCancelable(false) // 🔹 evita que se cierre tocando fuera
+                    .setCancelable(false)
                     .show();
         } else {
             // Ya existe un nombre guardado
-            Toast.makeText(this, "Bienvenido de nuevo, " + userName, Toast.LENGTH_SHORT).show();
+            View layout = LayoutInflater.from(this)
+                    .inflate(R.layout.custom_toast, (ViewGroup) findViewById(android.R.id.content), false);
+
+            TextView text = layout.findViewById(R.id.toastText);
+            text.setText("Bienvenid@ de nuevo, " + userName);
+
+            ImageView icon = layout.findViewById(R.id.toastIcon);
+            icon.setImageResource(R.drawable.enamorado);
+
+            Toast toast = new Toast(this);
+            toast.setDuration(Toast.LENGTH_SHORT);
+            toast.setView(layout);
+            toast.show();
 
             // 🔹 Lanzar directamente TasksActivity si ya hay nombre
             Intent intent = new Intent(MainActivity.this, TasksActivity.class);
             startActivity(intent);
-            finish(); // opcional
+            finish();
         }
     }
 }

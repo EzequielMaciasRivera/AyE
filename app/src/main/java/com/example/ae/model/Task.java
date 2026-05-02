@@ -15,6 +15,7 @@ public class Task {
     private long createdAt;     // fecha de creación (timestamp en milisegundos)
     private Long dueDate;       // fecha de cumplimiento (puede ser null)
     private String createdBy;   // nombre de quien creó la tarea
+    private Long completedAt;   // 🔹 fecha de cuando se marcó como completada
 
     // Constructor vacío (Room lo usa internamente)
     public Task() { }
@@ -25,6 +26,7 @@ public class Task {
         this.completed = false; // 🔹 siempre inicia como pendiente
         this.createdAt = System.currentTimeMillis(); // 🔹 asigna fecha actual
         this.createdBy = createdBy;
+        this.completedAt = null; // 🔹 aún no completada
     }
 
     // Getters y Setters
@@ -45,4 +47,7 @@ public class Task {
 
     public String getCreatedBy() { return createdBy; }
     public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public Long getCompletedAt() { return completedAt; }
+    public void setCompletedAt(Long completedAt) { this.completedAt = completedAt; }
 }

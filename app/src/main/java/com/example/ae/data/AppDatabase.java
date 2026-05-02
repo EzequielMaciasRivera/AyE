@@ -1,13 +1,5 @@
 package com.example.ae.data;
 
-import androidx.room.Database;
-import androidx.room.RoomDatabase;
-import com.example.ae.model.Task;
-import com.example.ae.data.TaskDao;
-import android.content.Context;
-import androidx.room.Database;
-import androidx.room.Room;
-import androidx.room.RoomDatabase;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -19,7 +11,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.example.ae.model.Task;
 
-@Database(entities = {Task.class}, version = 2) // 🔹 subimos versión a 2
+@Database(entities = {Task.class}, version = 2) // 🔹 versión 2
 public abstract class AppDatabase extends RoomDatabase {
 
     private static AppDatabase INSTANCE;
@@ -45,6 +37,7 @@ public abstract class AppDatabase extends RoomDatabase {
             database.execSQL("ALTER TABLE tasks ADD COLUMN createdAt INTEGER NOT NULL DEFAULT 0");
             database.execSQL("ALTER TABLE tasks ADD COLUMN dueDate INTEGER");
             database.execSQL("ALTER TABLE tasks ADD COLUMN createdBy TEXT");
+            database.execSQL("ALTER TABLE tasks ADD COLUMN completedAt INTEGER"); // 🔹 faltaba esta
         }
     };
 }

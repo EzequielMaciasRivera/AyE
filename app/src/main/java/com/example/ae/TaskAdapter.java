@@ -53,12 +53,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         holder.taskTitle.setText(task.getTitle());
 
         // 🔹 Mostrar información extra (fecha y creador)
-        String infoExtra = "Creado: " + formatDate(task.getCreatedAt());
+        String infoExtra = "Creada el: " + formatDate(task.getCreatedAt());
         if (task.getDueDate() != null) {
             infoExtra += "\nCumplir antes de: " + formatDate(task.getDueDate());
         }
         if (task.getCreatedBy() != null) {
-            infoExtra += "\nPor: " + task.getCreatedBy();
+            infoExtra += "\nAutor: " + task.getCreatedBy();
         }
         holder.taskInfo.setText(infoExtra);
 
@@ -74,11 +74,23 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                         .setMessage("¿Seguro que quieres marcar esta tarea como completada?")
                         .setPositiveButton("Sí", (d, which) -> {
                             task.setCompleted(true);
+                            task.setCompletedAt(System.currentTimeMillis()); // 🔹 guardar fecha de completado
                             taskDao.update(task);
 
-                            Toast.makeText(buttonView.getContext(),
-                                    "Tarea marcada como completada",
-                                    Toast.LENGTH_SHORT).show();
+                            // 🔹 Toast personalizado
+                            View layout = LayoutInflater.from(buttonView.getContext())
+                                    .inflate(R.layout.custom_toast, (ViewGroup) ((View) buttonView.getRootView()), false);
+
+                            TextView text = layout.findViewById(R.id.toastText);
+                            text.setText("Tarea marcada como completada");
+
+                            ImageView icon = layout.findViewById(R.id.toastIcon);
+                            icon.setImageResource(R.drawable.enamorado); // usa tu drawable
+
+                            Toast toast = new Toast(buttonView.getContext());
+                            toast.setDuration(Toast.LENGTH_SHORT);
+                            toast.setView(layout);
+                            toast.show();
 
                             d.dismiss();
                         })
@@ -93,7 +105,23 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 dialog.show();
             } else {
                 task.setCompleted(false);
+                task.setCompletedAt(null); // 🔹 limpiar fecha si se desmarca
                 taskDao.update(task);
+
+                // 🔹 Toast personalizado al desmarcar
+                View layout = LayoutInflater.from(buttonView.getContext())
+                        .inflate(R.layout.custom_toast, (ViewGroup) ((View) buttonView.getRootView()), false);
+
+                TextView text = layout.findViewById(R.id.toastText);
+                text.setText("Tarea marcada como pendiente");
+
+                ImageView icon = layout.findViewById(R.id.toastIcon);
+                icon.setImageResource(R.drawable.sorpresa); // usa tu drawable
+
+                Toast toast = new Toast(buttonView.getContext());
+                toast.setDuration(Toast.LENGTH_SHORT);
+                toast.setView(layout);
+                toast.show();
             }
         });
 
@@ -137,13 +165,36 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                             task.setTitle(nuevoTitulo);
                             taskDao.update(task);
 
-                            Toast.makeText(v.getContext(),
-                                    "Tarea actualizada correctamente",
-                                    Toast.LENGTH_SHORT).show();
+                            // 🔹 Toast personalizado de éxito
+                            View layout = LayoutInflater.from(v.getContext())
+                                    .inflate(R.layout.custom_toast, (ViewGroup) v.getRootView(), false);
+
+                            TextView text = layout.findViewById(R.id.toastText);
+                            text.setText("Tarea actualizada correctamente");
+
+                            ImageView icon = layout.findViewById(R.id.toastIcon);
+                            icon.setImageResource(R.drawable.enamorado); // usa tu drawable
+
+                            Toast toast = new Toast(v.getContext());
+                            toast.setDuration(Toast.LENGTH_SHORT);
+                            toast.setView(layout);
+                            toast.show();
+
                         } else {
-                            Toast.makeText(v.getContext(),
-                                    "El título no puede estar vacío",
-                                    Toast.LENGTH_SHORT).show();
+                            // 🔹 Toast personalizado de error
+                            View layout = LayoutInflater.from(v.getContext())
+                                    .inflate(R.layout.custom_toast, (ViewGroup) v.getRootView(), false);
+
+                            TextView text = layout.findViewById(R.id.toastText);
+                            text.setText("El título no puede estar vacío");
+
+                            ImageView icon = layout.findViewById(R.id.toastIcon);
+                            icon.setImageResource(R.drawable.no); // usa tu drawable
+
+                            Toast toast = new Toast(v.getContext());
+                            toast.setDuration(Toast.LENGTH_SHORT);
+                            toast.setView(layout);
+                            toast.show();
                         }
                     })
                     .setNegativeButton("Cancelar", null)

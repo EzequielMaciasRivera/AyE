@@ -22,18 +22,45 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_check_circle"
+            android:tint="@android:color/holo_green_dark"
             android:contentDescription="Tarea completada"
             android:layout_marginEnd="8dp"/>
 
-        <!-- Título de la tarea -->
-        <TextView
-            android:id="@+id/taskTitle"
+        <!-- Contenedor vertical para título + info -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Título de la tarea"
-            android:textSize="18sp"
-            android:textStyle="bold"/>
+            android:orientation="vertical">
+
+            <!-- Título de la tarea -->
+            <TextView
+                android:id="@+id/taskTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Título de la tarea"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <!-- Info extra: autor y fechas -->
+            <TextView
+                android:id="@+id/taskInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Info extra"
+                android:textSize="14sp"
+                android:textColor="@android:color/darker_gray"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+
+        <!-- Botón editar -->
+        <ImageButton
+            android:id="@+id/editButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_edit"
+            android:contentDescription="Editar tarea"/>
 
         <!-- Botón eliminar -->
         <ImageButton

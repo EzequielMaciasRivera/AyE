@@ -11,15 +11,6 @@ import com.example.ae.model.Task;
 import java.util.List;
 
 import androidx.lifecycle.LiveData;
-import androidx.room.Dao;
-import androidx.room.Delete;
-import androidx.room.Insert;
-import androidx.room.Query;
-import androidx.room.Update;
-
-import com.example.ae.model.Task;
-
-import java.util.List;
 
 @Dao
 public interface TaskDao {
@@ -41,18 +32,18 @@ public interface TaskDao {
     LiveData<List<Task>> getPendingTasks();
 
     // Consultar tareas completadas (LiveData)
-    @Query("SELECT * FROM tasks WHERE completed = 1 ORDER BY createdAt DESC")
+    @Query("SELECT * FROM tasks WHERE completed = 1 ORDER BY completedAt DESC") // 🔹 ahora ordena por fecha de completado
     LiveData<List<Task>> getCompletedTasks();
 
     // Consultar todas las tareas (LiveData)
     @Query("SELECT * FROM tasks ORDER BY createdAt DESC")
     LiveData<List<Task>> getAllTasks();
 
-    // 🔹 Consultar tareas creadas por un usuario específico
+    // Consultar tareas creadas por un usuario específico
     @Query("SELECT * FROM tasks WHERE createdBy = :userName")
     LiveData<List<Task>> getTasksByUser(String userName);
 
-    // 🔹 Consultar tareas con fecha de cumplimiento próxima
+    // Consultar tareas con fecha de cumplimiento próxima
     @Query("SELECT * FROM tasks WHERE dueDate IS NOT NULL AND completed = 0 ORDER BY dueDate ASC")
     LiveData<List<Task>> getUpcomingTasks();
 }
