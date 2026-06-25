@@ -58,6 +58,14 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_menu_edit"
             android:contentDescription="Editar tarea"/>
+        <!-- Botón editar autor -->
+        <ImageButton
+            android:id="@+id/editAuthorButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_myplaces"
+            android:contentDescription="Editar autor"/>
 
         <!-- Botón eliminar -->
         <ImageButton

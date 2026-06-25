@@ -46,4 +46,7 @@ public interface TaskDao {
     // Consultar tareas con fecha de cumplimiento próxima
     @Query("SELECT * FROM tasks WHERE dueDate IS NOT NULL AND completed = 0 ORDER BY dueDate ASC")
     LiveData<List<Task>> getUpcomingTasks();
+    @Query("UPDATE tasks SET createdBy = :nuevoAutor")
+    void updateAllAuthors(String nuevoAutor);
+
 }

@@ -10,44 +10,40 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Room;
 
 import com.example.ae.data.AppDatabase;
 import com.example.ae.data.TaskDao;
-import com.example.ae.model.Task;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class CompletedTasksFragmet extends Fragment {
 
     private RecyclerView recyclerView;
     private CompletedTasksAdapter adapter;
     private TaskDao taskDao;
-    private List<Task> completedTasks = new ArrayList<>();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        // ⚠️ Revisa que el nombre del layout sea correcto: fragment_completed_tasks.xml
         View view = inflater.inflate(R.layout.fragment_completed_taks, container, false);
 
         recyclerView = view.findViewById(R.id.completedRecyclerView);
 
-        // 🔹 Usar siempre la instancia singleton
+        // Usar siempre la instancia singleton de Room
         AppDatabase db = AppDatabase.getInstance(requireContext());
         taskDao = db.taskDao();
 
-        adapter = new CompletedTasksAdapter(completedTasks, taskDao);
+        // Inicializar adapter con lista vacía
+        adapter = new CompletedTasksAdapter(new ArrayList<>(), taskDao);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
 
-        // Observar cambios en la base de datos
+        // Observar cambios en la base de datos (LiveData)
         taskDao.getCompletedTasks().observe(getViewLifecycleOwner(), tasks -> {
-            completedTasks.clear();
-            completedTasks.addAll(tasks);
-            adapter.notifyDataSetChanged();
+            adapter.setTasks(tasks); // método en el adapter para actualizar la lista
         });
 
         return view;

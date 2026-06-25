@@ -1,5 +1,6 @@
 package com.example.ae;
 
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +33,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         this.taskDao = taskDao;
     }
 
-    // Método para actualizar la lista desde LiveData
     public void setTasks(List<Task> tasks) {
         this.taskList = tasks;
         notifyDataSetChanged();
@@ -52,7 +52,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
         holder.taskTitle.setText(task.getTitle());
 
-        // 🔹 Mostrar información extra (fecha y creador)
+        // Mostrar información extra
         String infoExtra = "Creada el: " + formatDate(task.getCreatedAt());
         if (task.getDueDate() != null) {
             infoExtra += "\nCumplir antes de: " + formatDate(task.getDueDate());
@@ -62,99 +62,69 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
         holder.taskInfo.setText(infoExtra);
 
-        // 🔹 Desactivar listener antes de setChecked
+        // 🔹 Usar una sola instancia de SharedPreferences
+        SharedPreferences prefs = holder.itemView.getContext()
+                .getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+        String currentUser = prefs.getString("userName", "").trim();
+
+        // Mostrar/ocultar botones según autor (normalizado)
+        boolean esAutor = task.getCreatedBy() != null &&
+                task.getCreatedBy().trim().equalsIgnoreCase(currentUser);
+        holder.editButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+        holder.deleteButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+        holder.editAuthorButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+
+        // Checkbox
         holder.taskCheckBox.setOnCheckedChangeListener(null);
         holder.taskCheckBox.setChecked(task.isCompleted());
 
-        // 🔹 Reactivar listener solo para cambios del usuario
         holder.taskCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            task.setCompleted(isChecked);
             if (isChecked) {
-                AlertDialog dialog = new AlertDialog.Builder(buttonView.getContext())
-                        .setTitle("Confirmar")
-                        .setMessage("¿Seguro que quieres marcar esta tarea como completada?")
-                        .setPositiveButton("Sí", (d, which) -> {
-                            task.setCompleted(true);
-                            task.setCompletedAt(System.currentTimeMillis()); // 🔹 guardar fecha de completado
-                            taskDao.update(task);
-
-                            // 🔹 Toast personalizado
-                            View layout = LayoutInflater.from(buttonView.getContext())
-                                    .inflate(R.layout.custom_toast, (ViewGroup) ((View) buttonView.getRootView()), false);
-
-                            TextView text = layout.findViewById(R.id.toastText);
-                            text.setText("Tarea marcada como completada");
-
-                            ImageView icon = layout.findViewById(R.id.toastIcon);
-                            icon.setImageResource(R.drawable.enamorado); // usa tu drawable
-
-                            Toast toast = new Toast(buttonView.getContext());
-                            toast.setDuration(Toast.LENGTH_SHORT);
-                            toast.setView(layout);
-                            toast.show();
-
-                            d.dismiss();
-                        })
-                        .setNegativeButton("No", (d, which) -> {
-                            holder.taskCheckBox.setChecked(false);
-                            d.dismiss();
-                        })
-                        .create();
-
-                dialog.setCanceledOnTouchOutside(false);
-                dialog.setCancelable(false);
-                dialog.show();
+                task.setCompletedAt(System.currentTimeMillis());
             } else {
-                task.setCompleted(false);
-                task.setCompletedAt(null); // 🔹 limpiar fecha si se desmarca
-                taskDao.update(task);
-
-                // 🔹 Toast personalizado al desmarcar
-                View layout = LayoutInflater.from(buttonView.getContext())
-                        .inflate(R.layout.custom_toast, (ViewGroup) ((View) buttonView.getRootView()), false);
-
-                TextView text = layout.findViewById(R.id.toastText);
-                text.setText("Tarea marcada como pendiente");
-
-                ImageView icon = layout.findViewById(R.id.toastIcon);
-                icon.setImageResource(R.drawable.sorpresa); // usa tu drawable
-
-                Toast toast = new Toast(buttonView.getContext());
-                toast.setDuration(Toast.LENGTH_SHORT);
-                toast.setView(layout);
-                toast.show();
+                task.setCompletedAt(null);
             }
+            taskDao.update(task);
+
+            showCustomToast(buttonView.getContext(),
+                    isChecked ? "Tarea marcada como completada" : "Tarea marcada como pendiente",
+                    isChecked ? R.drawable.enamorado : R.drawable.sorpresa);
         });
 
-        // 🔹 Botón eliminar
+        // Botón eliminar
         holder.deleteButton.setOnClickListener(v -> {
+            if (!esAutor) {
+                showCustomToast(v.getContext(),
+                        "Solo el autor puede eliminar esta tarea",
+                        R.drawable.no);
+                return;
+            }
+
             new AlertDialog.Builder(v.getContext())
                     .setTitle("Eliminar tarea")
                     .setMessage("¿Seguro que deseas eliminar esta tarea?")
                     .setPositiveButton("Sí", (dialog, which) -> {
                         taskDao.delete(task);
-
-                        LayoutInflater inflater = LayoutInflater.from(v.getContext());
-                        View layout = inflater.inflate(R.layout.custom_toast, (ViewGroup) v.getRootView(), false);
-
-                        TextView text = layout.findViewById(R.id.toastText);
-                        text.setText("Tarea eliminada");
-
-                        ImageView icon = layout.findViewById(R.id.toastIcon);
-                        icon.setImageResource(R.drawable.sorpresa);
-
-                        Toast toast = new Toast(v.getContext());
-                        toast.setDuration(Toast.LENGTH_SHORT);
-                        toast.setView(layout);
-                        toast.show();
+                        showCustomToast(v.getContext(),
+                                "Tarea eliminada",
+                                R.drawable.sorpresa);
                     })
                     .setNegativeButton("Cancelar", null)
                     .show();
         });
 
-        // 🔹 Botón editar
+        // Botón editar título
         holder.editButton.setOnClickListener(v -> {
+            if (!esAutor) {
+                showCustomToast(v.getContext(),
+                        "Solo el autor puede editar esta tarea",
+                        R.drawable.no);
+                return;
+            }
+
             EditText input = new EditText(v.getContext());
-            input.setText(task.getTitle()); // mostrar título actual
+            input.setText(task.getTitle());
 
             new AlertDialog.Builder(v.getContext())
                     .setTitle("Editar tarea")
@@ -165,36 +135,51 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                             task.setTitle(nuevoTitulo);
                             taskDao.update(task);
 
-                            // 🔹 Toast personalizado de éxito
-                            View layout = LayoutInflater.from(v.getContext())
-                                    .inflate(R.layout.custom_toast, (ViewGroup) v.getRootView(), false);
-
-                            TextView text = layout.findViewById(R.id.toastText);
-                            text.setText("Tarea actualizada correctamente");
-
-                            ImageView icon = layout.findViewById(R.id.toastIcon);
-                            icon.setImageResource(R.drawable.enamorado); // usa tu drawable
-
-                            Toast toast = new Toast(v.getContext());
-                            toast.setDuration(Toast.LENGTH_SHORT);
-                            toast.setView(layout);
-                            toast.show();
-
+                            showCustomToast(v.getContext(),
+                                    "Tarea actualizada correctamente",
+                                    R.drawable.enamorado);
                         } else {
-                            // 🔹 Toast personalizado de error
-                            View layout = LayoutInflater.from(v.getContext())
-                                    .inflate(R.layout.custom_toast, (ViewGroup) v.getRootView(), false);
+                            showCustomToast(v.getContext(),
+                                    "El título no puede estar vacío",
+                                    R.drawable.no);
+                        }
+                    })
+                    .setNegativeButton("Cancelar", null)
+                    .show();
+        });
 
-                            TextView text = layout.findViewById(R.id.toastText);
-                            text.setText("El título no puede estar vacío");
+        // Botón editar autor con actualización global
+        holder.editAuthorButton.setOnClickListener(v -> {
+            if (!esAutor) {
+                showCustomToast(v.getContext(),
+                        "Solo el autor puede editar su nombre",
+                        R.drawable.no);
+                return;
+            }
 
-                            ImageView icon = layout.findViewById(R.id.toastIcon);
-                            icon.setImageResource(R.drawable.no); // usa tu drawable
+            EditText input = new EditText(v.getContext());
+            input.setText(task.getCreatedBy());
 
-                            Toast toast = new Toast(v.getContext());
-                            toast.setDuration(Toast.LENGTH_SHORT);
-                            toast.setView(layout);
-                            toast.show();
+            new AlertDialog.Builder(v.getContext())
+                    .setTitle("Editar autor")
+                    .setView(input)
+                    .setPositiveButton("Guardar", (dialog, which) -> {
+                        String nuevoAutor = input.getText().toString().trim();
+                        if (!nuevoAutor.isEmpty()) {
+                            // 🔹 Actualizar todas las tareas en la base de datos
+                            taskDao.updateAllAuthors(nuevoAutor);
+
+                            // 🔹 Actualizar SharedPreferences
+                            prefs.edit().putString("userName", nuevoAutor).apply();
+
+
+                            showCustomToast(v.getContext(),
+                                    "Autor actualizado en todas las tareas",
+                                    R.drawable.enamorado);
+                        } else {
+                            showCustomToast(v.getContext(),
+                                    "El nombre no puede estar vacío",
+                                    R.drawable.no);
                         }
                     })
                     .setNegativeButton("Cancelar", null)
@@ -212,7 +197,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         TextView taskInfo;
         CheckBox taskCheckBox;
         ImageButton deleteButton;
-        ImageButton editButton; // 🔹 nuevo botón
+        ImageButton editButton;
+        ImageButton editAuthorButton;
 
         TaskViewHolder(View itemView) {
             super(itemView);
@@ -220,14 +206,30 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             taskInfo = itemView.findViewById(R.id.taskInfo);
             taskCheckBox = itemView.findViewById(R.id.taskCheckBox);
             deleteButton = itemView.findViewById(R.id.deleteButton);
-            editButton = itemView.findViewById(R.id.editButton); // referencia al botón editar
+            editButton = itemView.findViewById(R.id.editButton);
+            editAuthorButton = itemView.findViewById(R.id.editAuthorButton);
         }
     }
 
-    // 🔹 Método auxiliar para formatear fechas
     private String formatDate(long timestamp) {
         Date date = new Date(timestamp);
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
         return sdf.format(date);
+    }
+
+    private void showCustomToast(android.content.Context context, String message, int iconRes) {
+        View layout = LayoutInflater.from(context)
+                .inflate(R.layout.custom_toast, null);
+
+        TextView text = layout.findViewById(R.id.toastText);
+        text.setText(message);
+
+        ImageView icon = layout.findViewById(R.id.toastIcon);
+        icon.setImageResource(iconRes);
+
+        Toast toast = new Toast(context);
+        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.setView(layout);
+        toast.show();
     }
 }
