@@ -86,16 +86,19 @@ public class TasksActivity extends AppCompatActivity {
                 if (id == R.id.nav_tasks) {
                     tabLayout.setVisibility(View.VISIBLE);
                     viewPager.setVisibility(View.VISIBLE);
+                    findViewById(R.id.fragmentContainer).setVisibility(View.GONE);
                     return true;
                 } else if (id == R.id.nav_dates) {
                     tabLayout.setVisibility(View.GONE);
                     viewPager.setVisibility(View.GONE);
+                    findViewById(R.id.fragmentContainer).setVisibility(View.VISIBLE);
 
                     getSupportFragmentManager().beginTransaction()
                             .replace(R.id.fragmentContainer, new ImportantDatesFragment())
                             .commit();
                     return true;
                 }
+
 
                 return false;
             }
