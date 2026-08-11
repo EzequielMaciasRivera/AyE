@@ -7,23 +7,26 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.room.Room;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.ae.data.AppDatabase;
 import com.example.ae.data.TaskDao;
 import com.example.ae.model.Task;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.example.ae.R;
+
 
 public class TasksActivity extends AppCompatActivity {
 
@@ -73,6 +76,32 @@ public class TasksActivity extends AppCompatActivity {
                         tab.setText("Hechas");
                     }
                 }).attach();
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNavigation);
+
+        bottomNav.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+
+                if (id == R.id.nav_tasks) {
+                    tabLayout.setVisibility(View.VISIBLE);
+                    viewPager.setVisibility(View.VISIBLE);
+                    return true;
+                } else if (id == R.id.nav_dates) {
+                    tabLayout.setVisibility(View.GONE);
+                    viewPager.setVisibility(View.GONE);
+
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragmentContainer, new ImportantDatesFragment())
+                            .commit();
+                    return true;
+                }
+
+                return false;
+            }
+        });
+
+
 
         // Acción del botón flotante
         fabAddTask.setOnClickListener(v -> {

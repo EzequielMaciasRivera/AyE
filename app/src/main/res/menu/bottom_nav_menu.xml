@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<item
+    android:id="@+id/nav_tasks"
+    android:icon="@android:drawable/ic_menu_agenda"
+    android:title="Tareas" />
+
+<item
+    android:id="@+id/nav_dates"
+    android:icon="@android:drawable/ic_menu_my_calendar"
+    android:title="Fechas" />
+</menu>

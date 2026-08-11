@@ -1,41 +1,21 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
-    android:background="@android:color/white">
+    android:orientation="vertical">
 
-    <!-- Título grande -->
-    <TextView
-        android:id="@+id/tvWelcomeTitle"
-        android:layout_width="wrap_content"
+    <!-- Pestañas -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Bienvenido a A&amp;E"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"
-        android:gravity="center"
-        android:layout_marginBottom="16dp"/>
+        app:tabIndicatorColor="@color/purple_500"
+        app:tabSelectedTextColor="@color/purple_700"
+        app:tabTextColor="@android:color/darker_gray"/>
 
-    <!-- Imagen grande centrada -->
-    <ImageView
-        android:id="@+id/ivWelcomeImage"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:src="@drawable/iconotitle"
-        android:contentDescription="Imagen de bienvenida"
-        android:layout_marginBottom="16dp"/>
-
-    <!-- Mensaje de bienvenida -->
-    <TextView
-        android:id="@+id/tvWelcomeMessage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Organiza tus tareas fácilmente"
-        android:textSize="18sp"
-        android:textColor="@android:color/darker_gray"
-        android:gravity="center"/>
+    <!-- Contenedor de fragments -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
 </LinearLayout>

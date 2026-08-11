@@ -40,8 +40,7 @@
                 android:layout_height="wrap_content"
                 android:text="Título de la tarea"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/black"/>
+                android:textStyle="bold"/>
 
             <!-- Info extra: autor y fechas -->
             <TextView
