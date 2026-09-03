@@ -25,8 +25,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.example.ae.R;
-
 
 public class TasksActivity extends AppCompatActivity {
 
@@ -76,6 +74,7 @@ public class TasksActivity extends AppCompatActivity {
                         tab.setText("Hechas");
                     }
                 }).attach();
+
         BottomNavigationView bottomNav = findViewById(R.id.bottomNavigation);
 
         bottomNav.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
@@ -87,6 +86,10 @@ public class TasksActivity extends AppCompatActivity {
                     tabLayout.setVisibility(View.VISIBLE);
                     viewPager.setVisibility(View.VISIBLE);
                     findViewById(R.id.fragmentContainer).setVisibility(View.GONE);
+
+                    animateFabChange(R.drawable.baseline_add_task_24);
+                    fabAddTask.setOnClickListener(v -> showAddTaskDialog());
+
                     return true;
                 } else if (id == R.id.nav_dates) {
                     tabLayout.setVisibility(View.GONE);
@@ -96,70 +99,104 @@ public class TasksActivity extends AppCompatActivity {
                     getSupportFragmentManager().beginTransaction()
                             .replace(R.id.fragmentContainer, new ImportantDatesFragment())
                             .commit();
+
+                    animateFabChange(R.drawable.outline_add_ad_24);
+                    fabAddTask.setOnClickListener(v -> showAddDateDialog());
+
                     return true;
                 }
-
 
                 return false;
             }
         });
 
+        // Acción inicial del FAB
+        fabAddTask.setImageResource(R.drawable.baseline_add_task_24);
+        fabAddTask.setOnClickListener(v -> showAddTaskDialog());
+    }
 
+    // Método de animación fluido
+    private void animateFabChange(int newIconRes) {
+        fabAddTask.animate()
+                .rotationBy(180f)
+                .alpha(0f)
+                .setDuration(700)
+                .withEndAction(() -> {
+                    fabAddTask.setImageResource(newIconRes);
+                    fabAddTask.setRotation(0f);
 
-        // Acción del botón flotante
-        fabAddTask.setOnClickListener(v -> {
-            EditText input = new EditText(this);
-            input.setHint("Escribe el título de la tarea");
+                    fabAddTask.animate()
+                            .rotationBy(360f)
+                            .alpha(1f)
+                            .setDuration(700)
+                            .start();
+                })
+                .start();
+    }
 
-            new AlertDialog.Builder(this)
-                    .setTitle("Nueva tarea")
-                    .setView(input)
-                    .setPositiveButton("Agregar", (dialog, which) -> {
-                        String taskTitle = input.getText().toString().trim();
+    private void showAddTaskDialog() {
+        EditText input = new EditText(this);
+        input.setHint("Escribe el título de la tarea");
 
-                        if (!taskTitle.isEmpty()) {
-                            // Recuperar nombre del usuario desde SharedPreferences
-                            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-                            String userName = prefs.getString("userName", "desconocido");
+        new AlertDialog.Builder(this)
+                .setTitle("Nueva tarea")
+                .setView(input)
+                .setPositiveButton("Agregar", (dialog, which) -> {
+                    String taskTitle = input.getText().toString().trim();
 
-                            // Crear tarea con creador y fecha de creación
-                            Task newTask = new Task(taskTitle, userName);
-                            taskDao.insert(newTask);
+                    if (!taskTitle.isEmpty()) {
+                        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                        String userName = prefs.getString("userName", "desconocido");
 
-                            // Toast personalizado
-                            LayoutInflater inflater = getLayoutInflater();
-                            View layout = inflater.inflate(R.layout.custom_toast, null);
+                        Task newTask = new Task(taskTitle, userName);
+                        taskDao.insert(newTask);
 
-                            TextView text = layout.findViewById(R.id.toastText);
-                            text.setText("Tarea agregada por " + userName);
+                        showCustomToast("Tarea agregada por " + userName, R.drawable.enamorado);
+                    } else {
+                        showCustomToast("El título no puede estar vacío", R.drawable.no);
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
 
-                            ImageView icon = layout.findViewById(R.id.toastIcon);
-                            icon.setImageResource(R.drawable.enamorado);
+    private void showAddDateDialog() {
+        EditText inputTitle = new EditText(this);
+        inputTitle.setHint("Título del evento");
 
-                            Toast toast = new Toast(getApplicationContext());
-                            toast.setDuration(Toast.LENGTH_SHORT);
-                            toast.setView(layout);
-                            toast.show();
+        EditText inputDesc = new EditText(this);
+        inputDesc.setHint("Descripción");
 
-                        } else {
-                            // Toast de error
-                            LayoutInflater inflater = getLayoutInflater();
-                            View layout = inflater.inflate(R.layout.custom_toast, null);
+        new AlertDialog.Builder(this)
+                .setTitle("Nueva fecha importante")
+                .setView(inputTitle)
+                .setPositiveButton("Siguiente", (dialog, which) -> {
+                    String title = inputTitle.getText().toString().trim();
+                    String desc = inputDesc.getText().toString().trim();
 
-                            TextView text = layout.findViewById(R.id.toastText);
-                            text.setText("El título no puede estar vacío");
+                    if (!title.isEmpty()) {
+                        Toast.makeText(this, "Fecha agregada: " + title, Toast.LENGTH_SHORT).show();
+                    } else {
+                        showCustomToast("El título no puede estar vacío", R.drawable.no);
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
 
-                            ImageView icon = layout.findViewById(R.id.toastIcon);
-                            icon.setImageResource(R.drawable.no);
+    private void showCustomToast(String message, int iconRes) {
+        LayoutInflater inflater = getLayoutInflater();
+        View layout = inflater.inflate(R.layout.custom_toast, null);
 
-                            Toast toast = new Toast(getApplicationContext());
-                            toast.setDuration(Toast.LENGTH_SHORT);
-                            toast.setView(layout);
-                            toast.show();
-                        }
-                    })
-                    .setNegativeButton("Cancelar", null)
-                    .show();
-        });
+        TextView text = layout.findViewById(R.id.toastText);
+        text.setText(message);
+
+        ImageView icon = layout.findViewById(R.id.toastIcon);
+        icon.setImageResource(iconRes);
+
+        Toast toast = new Toast(getApplicationContext());
+        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.setView(layout);
+        toast.show();
     }
 }

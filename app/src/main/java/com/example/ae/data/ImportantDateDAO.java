@@ -13,8 +13,6 @@ import java.util.List;
 
 @Dao
 public interface ImportantDateDAO {
-    @Query("SELECT * FROM important_dates ORDER BY date ASC")
-    LiveData<List<ImportantDate>> getAllDates();
 
     @Insert
     void insertDate(ImportantDate date);
@@ -24,4 +22,16 @@ public interface ImportantDateDAO {
 
     @Delete
     void deleteDate(ImportantDate date);
+
+    // 🔹 Obtener todas las fechas ordenadas por fecha
+    @Query("SELECT * FROM important_dates ORDER BY date ASC")
+    LiveData<List<ImportantDate>> getAllDates();
+
+    // 🔹 Actualizar solo el autor
+    @Query("UPDATE important_dates SET author = :author WHERE id = :id")
+    void updateAuthor(int id, String author);
+
+    // 🔹 Contar registros (opcional)
+    @Query("SELECT COUNT(*) FROM important_dates")
+    int getCount();
 }

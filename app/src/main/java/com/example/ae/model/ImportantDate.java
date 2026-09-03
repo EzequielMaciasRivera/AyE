@@ -11,7 +11,12 @@ public class ImportantDate {
     private String title;
     private String description;
     private long date;
+    private String author; // 🔹 Nuevo campo
 
+    // ✅ Constructor vacío requerido por Room
+    public ImportantDate() {}
+
+    // Constructor con parámetros
     public ImportantDate(String title, String description, long date) {
         this.title = title;
         this.description = description;
@@ -49,5 +54,13 @@ public class ImportantDate {
 
     public void setDate(long date) {
         this.date = date;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 }

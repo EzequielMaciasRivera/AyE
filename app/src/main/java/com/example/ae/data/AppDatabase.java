@@ -12,6 +12,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import com.example.ae.model.Task;
 import com.example.ae.model.ImportantDate;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 @Database(entities = {Task.class, ImportantDate.class}, version = 3)
 public abstract class AppDatabase extends RoomDatabase {
 
@@ -30,6 +33,11 @@ public abstract class AppDatabase extends RoomDatabase {
         }
         return INSTANCE;
     }
+
+    // Executor para operaciones en segundo plano
+    private static final int NUMBER_OF_THREADS = 4;
+    public static final ExecutorService databaseWriteExecutor =
+            Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
     // Migración de versión 1 a 2
     static final Migration MIGRATION_1_2 = new Migration(1, 2) {
