@@ -6,59 +6,66 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Logo de la app -->
+    <!-- Fondo -->
     <ImageView
         android:id="@+id/backgroundImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:alpha="0.5"
         android:scaleType="centerCrop"
-        android:src="@drawable/tulipan" /> <!-- transparencia opcional -->
+        android:src="@drawable/tulipan" />
 
-    <!-- Título principal -->
-
-    <!-- TabLayout para pestañas -->
-
-    <!-- ViewPager2 para contener los fragmentos -->
-
+    <!-- Icono fijo arriba a la izquierda -->
     <ImageView
         android:id="@+id/appIcon"
-        android:layout_width="113dp"
-        android:layout_height="74dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="15dp"
+        android:layout_width="132dp"
+        android:layout_height="96dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
         android:contentDescription="Logo de A&amp;E"
         android:src="@drawable/iconotitle"
-        app:layout_constraintBottom_toTopOf="@+id/tabLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Mano fija arriba a la derecha -->
+    <ImageView
+        android:id="@+id/mano"
+        android:layout_width="142dp"
+        android:layout_height="96dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="mano"
+        android:src="@drawable/mano"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Texto centrado entre las dos imágenes -->
+    <!-- margen para centrar visualmente -->
+
+    <!-- Subtítulo -->
     <TextView
         android:id="@+id/titleText"
-        android:layout_width="249dp"
-        android:layout_height="79dp"
-        android:layout_marginTop="4dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28sp"
         android:ellipsize="none"
-        android:fontFamily="@font/elegante"
+        android:fontFamily="@font/comic"
         android:gravity="center"
         android:padding="16dp"
         android:singleLine="false"
         android:text="A&amp;E"
-        android:textSize="24sp"
+        android:textSize="28sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.487"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
     <TextView
         android:id="@+id/titleText2"
-        android:layout_width="248dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
         android:ellipsize="none"
         android:fontFamily="@font/apollo"
         android:gravity="center"
@@ -67,26 +74,11 @@
         android:text="Nuestras tareas"
         android:textSize="24sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.435"
+        app:layout_constraintTop_toBottomOf="@id/titleText"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <ImageView
-        android:id="@+id/mano"
-        android:layout_width="135dp"
-        android:layout_height="175dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="15dp"
-        android:contentDescription="mano"
-        android:src="@drawable/mano"
-        app:layout_constraintBottom_toTopOf="@+id/tabLayout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.418" />
-
+    <!-- TabLayout -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
         android:layout_width="0dp"
@@ -95,17 +87,14 @@
         android:layout_marginTop="16dp"
         android:background="@drawable/tab_background"
         android:padding="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.468"
+        app:layout_constraintTop_toBottomOf="@id/titleText2"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/titleText"
+        app:layout_constraintEnd_toEndOf="parent"
         app:tabIndicatorColor="@color/textPinkSelected"
         app:tabSelectedTextColor="@color/textPinkSelected"
-        app:tabTextColor="@color/white" />
+        app:tabTextColor="@color/white"/>
 
-
-
-
+    <!-- ViewPager -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="0dp"
@@ -115,8 +104,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-
-    <!-- Botón flotante para agregar tarea -->
+    <!-- Botón flotante -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addTaskButton"
         android:layout_width="wrap_content"
@@ -130,7 +118,7 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"/>
 
-
+    <!-- Contenedor de fragmentos -->
     <FrameLayout
         android:id="@+id/fragmentContainer"
         android:layout_width="0dp"
@@ -141,8 +129,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-
-
+    <!-- BottomNavigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"
         android:layout_width="0dp"
