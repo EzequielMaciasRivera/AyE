@@ -1,7 +1,6 @@
 package com.example.ae.data;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
@@ -15,10 +14,10 @@ import com.example.ae.model.ImportantDate;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Database(entities = {Task.class, ImportantDate.class}, version = 3)
+@Database(entities = {Task.class, ImportantDate.class}, version = 4)
 public abstract class AppDatabase extends RoomDatabase {
 
-    private static AppDatabase INSTANCE;
+    private static volatile AppDatabase INSTANCE;
 
     public abstract TaskDao taskDao();
     public abstract ImportantDateDAO importantDateDao();
@@ -26,10 +25,14 @@ public abstract class AppDatabase extends RoomDatabase {
     public static synchronized AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
-                            AppDatabase.class, "tasks-db")
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
-                    .allowMainThreadQueries() // ⚠️ solo para pruebas
+                            AppDatabase.class, "important-dates-db")
+
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4) // 🔹 Agregar migraciones
+                    .fallbackToDestructiveMigration() // opcional, borra datos si falla migración
+                    .allowMainThreadQueries()
                     .build();
+
+
         }
         return INSTANCE;
     }
@@ -59,6 +62,14 @@ public abstract class AppDatabase extends RoomDatabase {
                     "title TEXT, " +
                     "description TEXT, " +
                     "date INTEGER NOT NULL)");
+        }
+    };
+
+    // Migración de versión 3 a 4: añadir columna author
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE important_dates ADD COLUMN author TEXT");
         }
     };
 }

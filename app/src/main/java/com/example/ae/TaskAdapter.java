@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.ae.data.AppDatabase;
 import com.example.ae.data.TaskDao;
 import com.example.ae.model.Task;
 
@@ -166,15 +167,18 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                     .setPositiveButton("Guardar", (dialog, which) -> {
                         String nuevoAutor = input.getText().toString().trim();
                         if (!nuevoAutor.isEmpty()) {
-                            // 🔹 Actualizar todas las tareas en la base de datos
+                            // 🔹 Actualizar todas las tareas
                             taskDao.updateAllAuthors(nuevoAutor);
+
+                            // 🔹 Actualizar también todas las fechas importantes
+                            AppDatabase db = AppDatabase.getInstance(v.getContext());
+                            db.importantDateDao().updateAllAuthors(nuevoAutor);
 
                             // 🔹 Actualizar SharedPreferences
                             prefs.edit().putString("userName", nuevoAutor).apply();
 
-
                             showCustomToast(v.getContext(),
-                                    "Autor actualizado en todas las tareas",
+                                    "Autor actualizado en tareas y fechas",
                                     R.drawable.enamorado);
                         } else {
                             showCustomToast(v.getContext(),
@@ -185,6 +189,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                     .setNegativeButton("Cancelar", null)
                     .show();
         });
+
     }
 
     @Override

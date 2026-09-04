@@ -4,12 +4,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.ae.data.ImportantDateDAO;
 import com.example.ae.model.ImportantDate;
 
 import java.text.SimpleDateFormat;
@@ -34,7 +36,11 @@ public class ImportantDatesAdapter extends RecyclerView.Adapter<ImportantDatesAd
     }
 
     public void setDates(List<ImportantDate> dates) {
-        this.dateList = dates;
+        if (dates != null) {
+            this.dateList = dates;
+        } else {
+            this.dateList = new ArrayList<>();
+        }
         notifyDataSetChanged();
     }
 
@@ -53,23 +59,39 @@ public class ImportantDatesAdapter extends RecyclerView.Adapter<ImportantDatesAd
         holder.title.setText(date.getTitle());
         holder.description.setText(date.getDescription());
 
-        // Formatear fecha desde timestamp
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         holder.dateValue.setText("Fecha: " + sdf.format(new Date(date.getDate())));
+        holder.author.setText("Autor: " + date.getAuthor());
 
-        // Acciones de botones
+        // Botón editar fecha/título/descripcion → sin confirmación previa
         holder.editButton.setOnClickListener(v -> listener.onEdit(date));
+
+        // Botón editar autor → sin confirmación previa
         holder.editAuthorButton.setOnClickListener(v -> listener.onEditAuthor(date));
-        holder.deleteButton.setOnClickListener(v -> listener.onDelete(date));
+
+        // Botón eliminar con confirmación
+        holder.deleteButton.setOnClickListener(v -> {
+            new AlertDialog.Builder(v.getContext())
+                    .setTitle("Eliminar fecha")
+                    .setMessage("¿Seguro que deseas eliminar esta fecha importante?")
+                    .setPositiveButton("Sí", (dialog, which) -> {
+                        listener.onDelete(date);
+                        showCustomToast(v.getContext(),
+                                "Fecha eliminada correctamente",
+                                R.drawable.sorpresa);
+                    })
+                    .setNegativeButton("Cancelar", null)
+                    .show();
+        });
     }
 
     @Override
     public int getItemCount() {
-        return dateList.size();
+        return dateList != null ? dateList.size() : 0;
     }
 
     static class DateViewHolder extends RecyclerView.ViewHolder {
-        TextView title, description, dateValue;
+        TextView title, description, dateValue, author;
         ImageButton editButton, editAuthorButton, deleteButton;
 
         DateViewHolder(View itemView) {
@@ -77,9 +99,27 @@ public class ImportantDatesAdapter extends RecyclerView.Adapter<ImportantDatesAd
             title = itemView.findViewById(R.id.dateTitle);
             description = itemView.findViewById(R.id.dateDescription);
             dateValue = itemView.findViewById(R.id.dateValue);
+            author = itemView.findViewById(R.id.dateAuthor);
             editButton = itemView.findViewById(R.id.editButton);
             editAuthorButton = itemView.findViewById(R.id.editAuthorButton);
             deleteButton = itemView.findViewById(R.id.deleteButton);
         }
+    }
+
+    // 🔹 Método para mostrar toast personalizado (igual que en TaskAdapter)
+    private void showCustomToast(android.content.Context context, String message, int iconRes) {
+        View layout = LayoutInflater.from(context)
+                .inflate(R.layout.custom_toast, null);
+
+        TextView text = layout.findViewById(R.id.toastText);
+        text.setText(message);
+
+        ImageView icon = layout.findViewById(R.id.toastIcon);
+        icon.setImageResource(iconRes);
+
+        Toast toast = new Toast(context);
+        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.setView(layout);
+        toast.show();
     }
 }

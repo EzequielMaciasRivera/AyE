@@ -7,11 +7,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.example.ae.data.AppDatabase;
 import com.example.ae.data.TaskDao;
+import com.example.ae.model.ImportantDate;
 import com.example.ae.model.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -26,10 +27,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.app.DatePickerDialog;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import android.widget.Button;
+
+
 public class TasksActivity extends AppCompatActivity {
 
     private TaskDao taskDao;
     private FloatingActionButton fabAddTask;
+    private AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +52,7 @@ public class TasksActivity extends AppCompatActivity {
         fabAddTask = findViewById(R.id.addTaskButton);
 
         // Inicializar Room
-        AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+        db = AppDatabase.getInstance(getApplicationContext());
         taskDao = db.taskDao();
 
         // Configurar ViewPager con FragmentStateAdapter
@@ -133,6 +143,37 @@ public class TasksActivity extends AppCompatActivity {
                 })
                 .start();
     }
+    private void showEditAuthorDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Cambiar autor");
+
+        // Campo de texto para escribir el nuevo autor
+        EditText input = new EditText(this);
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        String currentAuthor = prefs.getString("userName", "desconocido");
+        input.setText(currentAuthor);
+
+        builder.setView(input);
+
+        builder.setPositiveButton("Guardar", (dialog, which) -> {
+            String newAuthor = input.getText().toString().trim();
+            if (!newAuthor.isEmpty()) {
+                // Guardar en SharedPreferences
+                prefs.edit().putString("userName", newAuthor).apply();
+
+                // Actualizar en Room
+                db.taskDao().updateAllAuthors(newAuthor);
+                db.importantDateDao().updateAllAuthors(newAuthor);
+
+                showCustomToast("Autor actualizado a " + newAuthor, R.drawable.enamorado);
+            } else {
+                showCustomToast("El autor no puede estar vacío", R.drawable.no);
+            }
+        });
+
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
+    }
 
     private void showAddTaskDialog() {
         EditText input = new EditText(this);
@@ -161,21 +202,55 @@ public class TasksActivity extends AppCompatActivity {
     }
 
     private void showAddDateDialog() {
-        EditText inputTitle = new EditText(this);
-        inputTitle.setHint("Título del evento");
+        AppDatabase db = AppDatabase.getInstance(getApplicationContext());
 
-        EditText inputDesc = new EditText(this);
-        inputDesc.setHint("Descripción");
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_date, null);
+        EditText inputTitle = dialogView.findViewById(R.id.editTitle);
+        EditText inputDesc = dialogView.findViewById(R.id.editDescription);
+        Button dateButton = dialogView.findViewById(R.id.btnPickDate);
+
+        // Fecha inicial
+        final long[] selectedDate = {System.currentTimeMillis()};
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        dateButton.setText(sdf.format(new Date(selectedDate[0])));
+
+        // Abrir calendario al pulsar el botón
+        dateButton.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            DatePickerDialog datePicker = new DatePickerDialog(this,
+                    (view, year, month, dayOfMonth) -> {
+                        Calendar chosen = Calendar.getInstance();
+                        chosen.set(year, month, dayOfMonth);
+                        selectedDate[0] = chosen.getTimeInMillis();
+                        dateButton.setText(dayOfMonth + "/" + (month + 1) + "/" + year);
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH));
+            datePicker.show();
+        });
 
         new AlertDialog.Builder(this)
                 .setTitle("Nueva fecha importante")
-                .setView(inputTitle)
-                .setPositiveButton("Siguiente", (dialog, which) -> {
+                .setView(dialogView)
+                .setPositiveButton("Guardar", (dialog, which) -> {
                     String title = inputTitle.getText().toString().trim();
                     String desc = inputDesc.getText().toString().trim();
 
                     if (!title.isEmpty()) {
-                        Toast.makeText(this, "Fecha agregada: " + title, Toast.LENGTH_SHORT).show();
+                        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                        String userName = prefs.getString("userName", "desconocido");
+
+                        ImportantDate newDate = new ImportantDate();
+                        newDate.setTitle(title);
+                        newDate.setDescription(desc);
+                        newDate.setDate(selectedDate[0]);
+                        newDate.setAuthor(userName);
+
+                        db.importantDateDao().insertDate(newDate);
+
+                        int countAfter = db.importantDateDao().getCount();
+                        showCustomToast("Fecha agregada por " + userName, R.drawable.enamorado);
                     } else {
                         showCustomToast("El título no puede estar vacío", R.drawable.no);
                     }
@@ -184,7 +259,8 @@ public class TasksActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void showCustomToast(String message, int iconRes) {
+
+    public void showCustomToast(String message, int iconRes) {
         LayoutInflater inflater = getLayoutInflater();
         View layout = inflater.inflate(R.layout.custom_toast, null);
 
@@ -199,4 +275,17 @@ public class TasksActivity extends AppCompatActivity {
         toast.setView(layout);
         toast.show();
     }
+
+    private void updateAuthor(String newAuthor) {
+        // Guardar en SharedPreferences
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        prefs.edit().putString("userName", newAuthor).apply();
+
+        // Actualizar en Room
+        db.taskDao().updateAllAuthors(newAuthor);
+        db.importantDateDao().updateAllAuthors(newAuthor);
+
+        showCustomToast("Autor actualizado a " + newAuthor, R.drawable.enamorado);
+    }
+
 }

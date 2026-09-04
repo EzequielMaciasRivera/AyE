@@ -34,4 +34,9 @@ public interface ImportantDateDAO {
     // 🔹 Contar registros (opcional)
     @Query("SELECT COUNT(*) FROM important_dates")
     int getCount();
+
+    @Query("UPDATE important_dates SET author = :newAuthor")
+    void updateAllAuthors(String newAuthor);
+
+
 }
