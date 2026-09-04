@@ -16,38 +16,46 @@
         android:src="@drawable/tulipan" />
 
     <!-- Icono fijo arriba a la izquierda -->
+
+    <!-- Mano fija arriba a la derecha -->
+
+    <!-- Texto centrado entre las dos imágenes -->
+    <!-- margen para centrar visualmente -->
+
+    <!-- Subtítulo -->
+
+
+    <!-- TabLayout -->
+
+    <!-- ViewPager -->
+
     <ImageView
         android:id="@+id/appIcon"
         android:layout_width="132dp"
         android:layout_height="96dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="16dp"
         android:contentDescription="Logo de A&amp;E"
         android:src="@drawable/iconotitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Mano fija arriba a la derecha -->
     <ImageView
         android:id="@+id/mano"
         android:layout_width="142dp"
         android:layout_height="96dp"
         android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="4dp"
         android:contentDescription="mano"
         android:src="@drawable/mano"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Texto centrado entre las dos imágenes -->
-    <!-- margen para centrar visualmente -->
-
-    <!-- Subtítulo -->
     <TextView
         android:id="@+id/titleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28sp"
+        android:layout_marginTop="16dp"
         android:ellipsize="none"
         android:fontFamily="@font/comic"
         android:gravity="center"
@@ -61,11 +69,10 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
     <TextView
         android:id="@+id/titleText2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="222dp"
+        android:layout_height="56dp"
         android:ellipsize="none"
         android:fontFamily="@font/apollo"
         android:gravity="center"
@@ -74,27 +81,26 @@
         android:text="Nuestras tareas"
         android:textSize="24sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/titleText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/titleText" />
 
-    <!-- TabLayout -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="4dp"
         android:background="@drawable/tab_background"
         android:padding="8dp"
-        app:layout_constraintTop_toBottomOf="@id/titleText2"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/titleText2"
         app:tabIndicatorColor="@color/textPinkSelected"
         app:tabSelectedTextColor="@color/textPinkSelected"
-        app:tabTextColor="@color/white"/>
+        app:tabTextColor="@color/white" />
 
-    <!-- ViewPager -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewPager"
         android:layout_width="0dp"

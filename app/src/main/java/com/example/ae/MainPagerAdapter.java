@@ -7,6 +7,11 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 public class MainPagerAdapter extends FragmentStateAdapter {
 
+    // 🔹 Mantener instancias fijas de los fragments
+    private final Fragment pendingFragment = new PendingTasksFragment();
+    private final Fragment completedFragment = new CompletedTasksFragmet();
+    private final Fragment datesFragment = new ImportantDatesFragment();
+
     public MainPagerAdapter(@NonNull AppCompatActivity activity) {
         super(activity);
     }
@@ -15,10 +20,10 @@ public class MainPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         switch (position) {
-            case 0: return new PendingTasksFragment();
-            case 1: return new CompletedTasksFragmet();
-            case 2: return new ImportantDatesFragment();
-            default: return new PendingTasksFragment();
+            case 0: return pendingFragment;
+            case 1: return completedFragment;
+            case 2: return datesFragment;
+            default: return pendingFragment;
         }
     }
 

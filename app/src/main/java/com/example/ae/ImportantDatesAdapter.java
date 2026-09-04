@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.ae.model.ImportantDate;
@@ -33,15 +34,44 @@ public class ImportantDatesAdapter extends RecyclerView.Adapter<ImportantDatesAd
 
     public ImportantDatesAdapter(OnDateClickListener listener) {
         this.listener = listener;
+        setHasStableIds(true); // ✅ IDs estables activados
     }
 
-    public void setDates(List<ImportantDate> dates) {
-        if (dates != null) {
-            this.dateList = dates;
-        } else {
-            this.dateList = new ArrayList<>();
-        }
-        notifyDataSetChanged();
+    @Override
+    public long getItemId(int position) {
+        return dateList.get(position).getId(); // ✅ usar el ID único de la entidad
+    }
+
+    // 🔹 Usar DiffUtil en lugar de notifyDataSetChanged
+    public void setDates(List<ImportantDate> newDates) {
+        List<ImportantDate> safeNewDates = (newDates != null) ? newDates : new ArrayList<>();
+
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() { return dateList.size(); }
+
+            @Override
+            public int getNewListSize() { return safeNewDates.size(); }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                return dateList.get(oldItemPosition).getId() ==
+                        safeNewDates.get(newItemPosition).getId();
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                ImportantDate oldItem = dateList.get(oldItemPosition);
+                ImportantDate newItem = safeNewDates.get(newItemPosition);
+                return oldItem.getTitle().equals(newItem.getTitle())
+                        && oldItem.getDescription().equals(newItem.getDescription())
+                        && oldItem.getDate() == newItem.getDate()
+                        && oldItem.getAuthor().equals(newItem.getAuthor());
+            }
+        });
+
+        dateList = safeNewDates;
+        diffResult.dispatchUpdatesTo(this);
     }
 
     @NonNull
@@ -63,13 +93,9 @@ public class ImportantDatesAdapter extends RecyclerView.Adapter<ImportantDatesAd
         holder.dateValue.setText("Fecha: " + sdf.format(new Date(date.getDate())));
         holder.author.setText("Autor: " + date.getAuthor());
 
-        // Botón editar fecha/título/descripcion → sin confirmación previa
         holder.editButton.setOnClickListener(v -> listener.onEdit(date));
-
-        // Botón editar autor → sin confirmación previa
         holder.editAuthorButton.setOnClickListener(v -> listener.onEditAuthor(date));
 
-        // Botón eliminar con confirmación
         holder.deleteButton.setOnClickListener(v -> {
             new AlertDialog.Builder(v.getContext())
                     .setTitle("Eliminar fecha")
@@ -106,7 +132,6 @@ public class ImportantDatesAdapter extends RecyclerView.Adapter<ImportantDatesAd
         }
     }
 
-    // 🔹 Método para mostrar toast personalizado (igual que en TaskAdapter)
     private void showCustomToast(android.content.Context context, String message, int iconRes) {
         View layout = LayoutInflater.from(context)
                 .inflate(R.layout.custom_toast, null);
