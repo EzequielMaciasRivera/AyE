@@ -11,21 +11,56 @@ public class ImportantDate {
     private String title;
     private String description;
     private long date;
-    private String author;
+    private String author; // 🔹 Nuevo campo
 
-    // Getters y setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    // ✅ Constructor vacío requerido por Room
+    public ImportantDate() {}
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    // Constructor con parámetros
+    public ImportantDate(String title, String description, long date) {
+        this.title = title;
+        this.description = description;
+        this.date = date;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    // 🔹 Getters y Setters
+    public int getId() {
+        return id;
+    }
 
-    public long getDate() { return date; }
-    public void setDate(long date) { this.date = date; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public long getDate() {
+        return date;
+    }
+
+    public void setDate(long date) {
+        this.date = date;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
 }

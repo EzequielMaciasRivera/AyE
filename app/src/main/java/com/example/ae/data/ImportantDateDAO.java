@@ -27,12 +27,16 @@ public interface ImportantDateDAO {
     @Query("SELECT * FROM important_dates ORDER BY date ASC")
     LiveData<List<ImportantDate>> getAllDates();
 
+    // 🔹 Actualizar solo el autor
     @Query("UPDATE important_dates SET author = :author WHERE id = :id")
     void updateAuthor(int id, String author);
 
+    // 🔹 Contar registros (opcional)
     @Query("SELECT COUNT(*) FROM important_dates")
     int getCount();
 
     @Query("UPDATE important_dates SET author = :newAuthor")
     void updateAllAuthors(String newAuthor);
+
+
 }

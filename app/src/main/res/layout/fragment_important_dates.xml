@@ -6,25 +6,21 @@
     android:layout_height="match_parent">
 
     <!-- Título fijo -->
-
-    <!-- Lista de tarjetas -->
-
     <TextView
         android:id="@+id/datesTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:layout_marginTop="16dp"
         android:text="💙 Fechas importantes 💖"
         android:textAlignment="center"
-        android:textColor="#FF69B4"
         android:textSize="22sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        android:textColor="#FF69B4"
+        android:layout_margin="16dp"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"/>
 
+    <!-- Lista de tarjetas -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewDates"
         android:layout_width="0dp"

@@ -34,27 +34,28 @@ import java.util.Date;
 import java.util.Locale;
 import android.widget.Button;
 
+
 public class TasksActivity extends AppCompatActivity {
 
     private TaskDao taskDao;
     private FloatingActionButton fabAddTask;
     private AppDatabase db;
 
-    // ✅ Mantener instancia fija del fragmento de fechas
-    private ImportantDatesFragment datesFragment;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tasks);
 
+        // Referencias UI
         TabLayout tabLayout = findViewById(R.id.tabLayout);
         ViewPager2 viewPager = findViewById(R.id.viewPager);
         fabAddTask = findViewById(R.id.addTaskButton);
 
+        // Inicializar Room
         db = AppDatabase.getInstance(getApplicationContext());
         taskDao = db.taskDao();
 
+        // Configurar ViewPager con FragmentStateAdapter
         FragmentStateAdapter adapter = new FragmentStateAdapter(this) {
             @NonNull
             @Override
@@ -68,59 +69,63 @@ public class TasksActivity extends AppCompatActivity {
 
             @Override
             public int getItemCount() {
-                return 2;
+                return 2; // Dos pestañas
             }
         };
 
         viewPager.setAdapter(adapter);
-        viewPager.setOffscreenPageLimit(3);
 
+        // Conectar TabLayout con ViewPager
         new TabLayoutMediator(tabLayout, viewPager,
                 (tab, position) -> {
-                    if (position == 0) tab.setText("Por hacer");
-                    else tab.setText("Hechas");
+                    if (position == 0) {
+                        tab.setText("Por hacer");
+                    } else {
+                        tab.setText("Hechas");
+                    }
                 }).attach();
 
         BottomNavigationView bottomNav = findViewById(R.id.bottomNavigation);
 
-        // ✅ Crear instancia fija de fechas
-        datesFragment = new ImportantDatesFragment();
+        bottomNav.setOnItemSelectedListener(new BottomNavigationView.OnItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
 
-        bottomNav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
+                if (id == R.id.nav_tasks) {
+                    tabLayout.setVisibility(View.VISIBLE);
+                    viewPager.setVisibility(View.VISIBLE);
+                    findViewById(R.id.fragmentContainer).setVisibility(View.GONE);
 
-            if (id == R.id.nav_tasks) {
-                tabLayout.setVisibility(View.VISIBLE);
-                viewPager.setVisibility(View.VISIBLE);
-                findViewById(R.id.fragmentContainer).setVisibility(View.GONE);
+                    animateFabChange(R.drawable.baseline_add_task_24);
+                    fabAddTask.setOnClickListener(v -> showAddTaskDialog());
 
-                animateFabChange(R.drawable.baseline_add_task_24);
-                fabAddTask.setOnClickListener(v -> showAddTaskDialog());
-                return true;
+                    return true;
+                } else if (id == R.id.nav_dates) {
+                    tabLayout.setVisibility(View.GONE);
+                    viewPager.setVisibility(View.GONE);
+                    findViewById(R.id.fragmentContainer).setVisibility(View.VISIBLE);
 
-            } else if (id == R.id.nav_dates) {
-                tabLayout.setVisibility(View.GONE);
-                viewPager.setVisibility(View.GONE);
-                findViewById(R.id.fragmentContainer).setVisibility(View.VISIBLE);
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragmentContainer, new ImportantDatesFragment())
+                            .commit();
 
-                // ✅ Usar siempre la misma instancia
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragmentContainer, datesFragment)
-                        .commit();
+                    animateFabChange(R.drawable.outline_add_ad_24);
+                    fabAddTask.setOnClickListener(v -> showAddDateDialog());
 
-                animateFabChange(R.drawable.outline_add_ad_24);
-                fabAddTask.setOnClickListener(v -> datesFragment.showAddDateDialog());
-                return true;
+                    return true;
+                }
+
+                return false;
             }
-
-            return false;
         });
 
+        // Acción inicial del FAB
         fabAddTask.setImageResource(R.drawable.baseline_add_task_24);
         fabAddTask.setOnClickListener(v -> showAddTaskDialog());
     }
 
-    // ✅ Método de animación fluido
+    // Método de animación fluido
     private void animateFabChange(int newIconRes) {
         fabAddTask.animate()
                 .rotationBy(180f)
@@ -138,28 +143,34 @@ public class TasksActivity extends AppCompatActivity {
                 })
                 .start();
     }
-
     private void showEditAuthorDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Cambiar autor");
 
+        // Campo de texto para escribir el nuevo autor
         EditText input = new EditText(this);
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         String currentAuthor = prefs.getString("userName", "desconocido");
         input.setText(currentAuthor);
 
         builder.setView(input);
+
         builder.setPositiveButton("Guardar", (dialog, which) -> {
             String newAuthor = input.getText().toString().trim();
             if (!newAuthor.isEmpty()) {
+                // Guardar en SharedPreferences
                 prefs.edit().putString("userName", newAuthor).apply();
+
+                // Actualizar en Room
                 db.taskDao().updateAllAuthors(newAuthor);
                 db.importantDateDao().updateAllAuthors(newAuthor);
+
                 showCustomToast("Autor actualizado a " + newAuthor, R.drawable.enamorado);
             } else {
                 showCustomToast("El autor no puede estar vacío", R.drawable.no);
             }
         });
+
         builder.setNegativeButton("Cancelar", null);
         builder.show();
     }
@@ -173,6 +184,7 @@ public class TasksActivity extends AppCompatActivity {
                 .setView(input)
                 .setPositiveButton("Agregar", (dialog, which) -> {
                     String taskTitle = input.getText().toString().trim();
+
                     if (!taskTitle.isEmpty()) {
                         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                         String userName = prefs.getString("userName", "desconocido");
@@ -181,11 +193,64 @@ public class TasksActivity extends AppCompatActivity {
                         taskDao.insert(newTask);
 
                         showCustomToast("Tarea agregada por " + userName, R.drawable.enamorado);
+                    } else {
+                        showCustomToast("El título no puede estar vacío", R.drawable.no);
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
 
-                        // ✅ Redirigir a la pestaña "Por hacer"
-                        ViewPager2 viewPager = findViewById(R.id.viewPager);
-                        viewPager.setCurrentItem(0, true);
+    private void showAddDateDialog() {
+        AppDatabase db = AppDatabase.getInstance(getApplicationContext());
 
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_date, null);
+        EditText inputTitle = dialogView.findViewById(R.id.editTitle);
+        EditText inputDesc = dialogView.findViewById(R.id.editDescription);
+        Button dateButton = dialogView.findViewById(R.id.btnPickDate);
+
+        // Fecha inicial
+        final long[] selectedDate = {System.currentTimeMillis()};
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        dateButton.setText(sdf.format(new Date(selectedDate[0])));
+
+        // Abrir calendario al pulsar el botón
+        dateButton.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            DatePickerDialog datePicker = new DatePickerDialog(this,
+                    (view, year, month, dayOfMonth) -> {
+                        Calendar chosen = Calendar.getInstance();
+                        chosen.set(year, month, dayOfMonth);
+                        selectedDate[0] = chosen.getTimeInMillis();
+                        dateButton.setText(dayOfMonth + "/" + (month + 1) + "/" + year);
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH));
+            datePicker.show();
+        });
+
+        new AlertDialog.Builder(this)
+                .setTitle("Nueva fecha importante")
+                .setView(dialogView)
+                .setPositiveButton("Guardar", (dialog, which) -> {
+                    String title = inputTitle.getText().toString().trim();
+                    String desc = inputDesc.getText().toString().trim();
+
+                    if (!title.isEmpty()) {
+                        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                        String userName = prefs.getString("userName", "desconocido");
+
+                        ImportantDate newDate = new ImportantDate();
+                        newDate.setTitle(title);
+                        newDate.setDescription(desc);
+                        newDate.setDate(selectedDate[0]);
+                        newDate.setAuthor(userName);
+
+                        db.importantDateDao().insertDate(newDate);
+
+                        int countAfter = db.importantDateDao().getCount();
+                        showCustomToast("Fecha agregada por " + userName, R.drawable.enamorado);
                     } else {
                         showCustomToast("El título no puede estar vacío", R.drawable.no);
                     }
@@ -198,10 +263,13 @@ public class TasksActivity extends AppCompatActivity {
     public void showCustomToast(String message, int iconRes) {
         LayoutInflater inflater = getLayoutInflater();
         View layout = inflater.inflate(R.layout.custom_toast, null);
+
         TextView text = layout.findViewById(R.id.toastText);
         text.setText(message);
+
         ImageView icon = layout.findViewById(R.id.toastIcon);
         icon.setImageResource(iconRes);
+
         Toast toast = new Toast(getApplicationContext());
         toast.setDuration(Toast.LENGTH_SHORT);
         toast.setView(layout);
@@ -209,10 +277,15 @@ public class TasksActivity extends AppCompatActivity {
     }
 
     private void updateAuthor(String newAuthor) {
+        // Guardar en SharedPreferences
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         prefs.edit().putString("userName", newAuthor).apply();
+
+        // Actualizar en Room
         db.taskDao().updateAllAuthors(newAuthor);
         db.importantDateDao().updateAllAuthors(newAuthor);
+
         showCustomToast("Autor actualizado a " + newAuthor, R.drawable.enamorado);
     }
+
 }

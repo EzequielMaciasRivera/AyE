@@ -13,7 +13,6 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Transformations;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,19 +36,29 @@ public class ImportantDatesFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recyclerViewDates);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setItemAnimator(null); // ✅ eliminar animaciones
 
         db = AppDatabase.getInstance(getContext());
-        Log.d("Fragment", "Registros actuales en la tabla: " + db.importantDateDao().getCount());
+        int count = db.importantDateDao().getCount();
+        Log.d("Fragment", "Registros actuales en la tabla: " + count);
 
+        // ✅ Constructor del adapter con listener
         adapter = new ImportantDatesAdapter(new ImportantDatesAdapter.OnDateClickListener() {
             @Override
-            public void onEdit(ImportantDate date) { showEditDateDialog(date); }
+            public void onEdit(ImportantDate date) {
+                showEditDateDialog(date);
+            }
+
             @Override
-            public void onEditAuthor(ImportantDate date) { showEditAuthorDialog(date); }
+            public void onEditAuthor(ImportantDate date) {
+                showEditAuthorDialog(date);
+            }
+
             @Override
             public void onDelete(ImportantDate date) {
                 db.importantDateDao().deleteDate(date);
+                Log.d("Fragment", "Fecha eliminada: " + date.getTitle());
+
+                // 🔹 Toast después de eliminar
                 ((TasksActivity) requireActivity())
                         .showCustomToast("Fecha eliminada correctamente", R.drawable.sorpresa);
             }
@@ -57,15 +66,76 @@ public class ImportantDatesFragment extends Fragment {
 
         recyclerView.setAdapter(adapter);
 
-        // ✅ Observa los datos con distinctUntilChanged
-        Transformations.distinctUntilChanged(
-                db.importantDateDao().getAllDates()
-        ).observe(getViewLifecycleOwner(), dates -> {
+        // Observa los datos en LiveData
+        db.importantDateDao().getAllDates().observe(getViewLifecycleOwner(), dates -> {
             adapter.setDates(dates);
             Log.d("Fragment", "Observer recibió " + dates.size() + " registros");
         });
 
         return view;
+    }
+
+    // 🔹 Diálogo para agregar nueva fecha
+    public void showAddDateDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Nueva fecha importante");
+
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_date, null);
+        EditText titleInput = dialogView.findViewById(R.id.editTitle);
+        EditText descriptionInput = dialogView.findViewById(R.id.editDescription);
+        Button dateButton = dialogView.findViewById(R.id.btnPickDate);
+
+        final long[] selectedDate = {System.currentTimeMillis()};
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        dateButton.setText(sdf.format(new Date(selectedDate[0])));
+
+        dateButton.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            DatePickerDialog datePicker = new DatePickerDialog(requireContext(),
+                    (view, year, month, dayOfMonth) -> {
+                        Calendar chosen = Calendar.getInstance();
+                        chosen.set(year, month, dayOfMonth);
+                        selectedDate[0] = chosen.getTimeInMillis();
+                        dateButton.setText(dayOfMonth + "/" + (month + 1) + "/" + year);
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH));
+            datePicker.show();
+        });
+
+        builder.setView(dialogView);
+        builder.setPositiveButton("Guardar", null);
+        builder.setNegativeButton("Cancelar", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String title = titleInput.getText().toString().trim();
+            if (title.isEmpty()) {
+                titleInput.setError("El título no puede estar vacío");
+                return;
+            }
+
+            ImportantDate newDate = new ImportantDate();
+            newDate.setTitle(title);
+            newDate.setDescription(descriptionInput.getText().toString().trim());
+            newDate.setDate(selectedDate[0]);
+
+            SharedPreferences prefs = requireContext().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+            String userName = prefs.getString("userName", "desconocido");
+            newDate.setAuthor(userName);
+
+            db.importantDateDao().insertDate(newDate);
+            Log.d("Fragment", "Fecha insertada: " + newDate.getTitle());
+
+            // 🔹 Toast después de guardar
+            ((TasksActivity) requireActivity())
+                    .showCustomToast("Fecha agregada por " + userName, R.drawable.enamorado);
+
+            dialog.dismiss();
+        });
     }
 
     // 🔹 Diálogo para editar fecha
@@ -106,6 +176,7 @@ public class ImportantDatesFragment extends Fragment {
             String description = descriptionInput.getText().toString().trim();
 
             if (title.isEmpty()) {
+                // 🔹 Mostrar toast si el título está vacío
                 ((TasksActivity) requireActivity())
                         .showCustomToast("El título no puede estar vacío", R.drawable.no);
                 return;
@@ -118,6 +189,7 @@ public class ImportantDatesFragment extends Fragment {
             db.importantDateDao().updateDate(date);
             Log.d("Fragment", "Fecha actualizada: " + date.getTitle());
 
+            // 🔹 Toast después de guardar correctamente
             ((TasksActivity) requireActivity())
                     .showCustomToast("Fecha actualizada correctamente", R.drawable.enamorado);
         });
@@ -144,11 +216,13 @@ public class ImportantDatesFragment extends Fragment {
                 SharedPreferences prefs = requireContext().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
                 prefs.edit().putString("userName", newAuthor).apply();
 
+                // 🔹 Actualizar todos los registros
                 db.taskDao().updateAllAuthors(newAuthor);
                 db.importantDateDao().updateAllAuthors(newAuthor);
 
                 Log.d("Fragment", "Autor actualizado a: " + newAuthor);
 
+                // 🔹 Toast después de guardar
                 ((TasksActivity) requireActivity())
                         .showCustomToast("Autor actualizado correctamente", R.drawable.enamorado);
             } else {
@@ -159,63 +233,4 @@ public class ImportantDatesFragment extends Fragment {
         builder.setNegativeButton("Cancelar", null);
         builder.show();
     }
-
-    public void showAddDateDialog() {
-        AppDatabase db = AppDatabase.getInstance(requireContext());
-
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_date, null);
-        EditText inputTitle = dialogView.findViewById(R.id.editTitle);
-        EditText inputDesc = dialogView.findViewById(R.id.editDescription);
-        Button dateButton = dialogView.findViewById(R.id.btnPickDate);
-
-        // Fecha inicial
-        final long[] selectedDate = {System.currentTimeMillis()};
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        dateButton.setText(sdf.format(new Date(selectedDate[0])));
-
-        // Abrir calendario al pulsar el botón
-        dateButton.setOnClickListener(v -> {
-            Calendar calendar = Calendar.getInstance();
-            DatePickerDialog datePicker = new DatePickerDialog(requireContext(),
-                    (view, year, month, dayOfMonth) -> {
-                        Calendar chosen = Calendar.getInstance();
-                        chosen.set(year, month, dayOfMonth);
-                        selectedDate[0] = chosen.getTimeInMillis();
-                        dateButton.setText(dayOfMonth + "/" + (month + 1) + "/" + year);
-                    },
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH));
-            datePicker.show();
-        });
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Nueva fecha importante")
-                .setView(dialogView)
-                .setPositiveButton("Guardar", (dialog, which) -> {
-                    String title = inputTitle.getText().toString().trim();
-                    String desc = inputDesc.getText().toString().trim();
-
-                    if (!title.isEmpty()) {
-                        SharedPreferences prefs = requireContext().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
-                        String userName = prefs.getString("userName", "desconocido");
-
-                        ImportantDate newDate = new ImportantDate();
-                        newDate.setTitle(title);
-                        newDate.setDescription(desc);
-                        newDate.setDate(selectedDate[0]);
-                        newDate.setAuthor(userName);
-
-                        db.importantDateDao().insertDate(newDate);
-
-                        // ✅ Llamar al método de la Activity para mostrar el Toast
-                        ((TasksActivity) requireActivity()).showCustomToast("Fecha agregada por " + userName, R.drawable.enamorado);
-                    } else {
-                        ((TasksActivity) requireActivity()).showCustomToast("El título no puede estar vacío", R.drawable.no);
-                    }
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
-
 }
