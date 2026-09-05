@@ -1,0 +1,6 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Estado seleccionado -->
+    <item android:color="#FD3E6E" android:state_selected="true"/>
+    <!-- Estado normal -->
+    <item android:color="#FFFFFF"/>
+</selector>
