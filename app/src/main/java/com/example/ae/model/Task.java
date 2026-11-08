@@ -3,30 +3,34 @@ package com.example.ae.model;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.util.Objects;
+
 @Entity(tableName = "tasks")
 public class Task {
+
     @PrimaryKey(autoGenerate = true)
     private int id;
 
     private String title;
-    private boolean completed = false; // 🔹 valor por defecto
-
-    // Nuevos campos
+    private boolean completed = false; // valor por defecto
     private long createdAt;     // fecha de creación (timestamp en milisegundos)
     private Long dueDate;       // fecha de cumplimiento (puede ser null)
-    private String createdBy;   // nombre de quien creó la tarea
-    private Long completedAt;   // 🔹 fecha de cuando se marcó como completada
+    private String createdBy;   // usuario que creó la tarea
+    private Long completedAt;   // fecha de cuando se completó (puede ser null)
 
-    // Constructor vacío (Room lo usa internamente)
+    // 🔹 Clave única de Firestore
+    private String firebaseId;
+
+    // Constructor vacío (Room y Firebase lo requieren)
     public Task() { }
 
     // Constructor principal
     public Task(String title, String createdBy) {
         this.title = title;
-        this.completed = false; // 🔹 siempre inicia como pendiente
-        this.createdAt = System.currentTimeMillis(); // 🔹 asigna fecha actual
+        this.completed = false;
+        this.createdAt = System.currentTimeMillis();
         this.createdBy = createdBy;
-        this.completedAt = null; // 🔹 aún no completada
+        this.completedAt = null;
     }
 
     // Getters y Setters
@@ -50,4 +54,21 @@ public class Task {
 
     public Long getCompletedAt() { return completedAt; }
     public void setCompletedAt(Long completedAt) { this.completedAt = completedAt; }
+
+    public String getFirebaseId() { return firebaseId; }
+    public void setFirebaseId(String firebaseId) { this.firebaseId = firebaseId; }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Task)) return false;
+        Task other = (Task) obj;
+        return Objects.equals(firebaseId, other.firebaseId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(firebaseId);
+    }
+
 }

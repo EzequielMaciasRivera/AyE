@@ -26,16 +26,13 @@ public abstract class AppDatabase extends RoomDatabase {
         if (INSTANCE == null) {
             INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             AppDatabase.class, "important-dates-db")
-
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4) // 🔹 Agregar migraciones
-                    .fallbackToDestructiveMigration() // opcional, borra datos si falla migración
+                    .fallbackToDestructiveMigration() // 🔹 borra la base si falla migración
                     .allowMainThreadQueries()
                     .build();
-
-
         }
         return INSTANCE;
     }
+
 
     // Executor para operaciones en segundo plano
     private static final int NUMBER_OF_THREADS = 4;

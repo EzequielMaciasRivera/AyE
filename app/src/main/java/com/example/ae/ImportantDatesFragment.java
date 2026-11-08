@@ -13,11 +13,12 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.ae.data.AppDatabase;
 import com.example.ae.model.ImportantDate;
+import com.example.ae.model.ImportantDatesViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -27,7 +28,7 @@ import java.util.Locale;
 public class ImportantDatesFragment extends Fragment {
     private RecyclerView recyclerView;
     private ImportantDatesAdapter adapter;
-    private AppDatabase db;
+    private ImportantDatesViewModel datesViewModel;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -37,11 +38,10 @@ public class ImportantDatesFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recyclerViewDates);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        db = AppDatabase.getInstance(getContext());
-        int count = db.importantDateDao().getCount();
-        Log.d("Fragment", "Registros actuales en la tabla: " + count);
+        // ✅ Inicializar ViewModel
+        datesViewModel = new ViewModelProvider(requireActivity()).get(ImportantDatesViewModel.class);
 
-        // ✅ Constructor del adapter con listener
+        // ✅ Adapter con listener
         adapter = new ImportantDatesAdapter(new ImportantDatesAdapter.OnDateClickListener() {
             @Override
             public void onEdit(ImportantDate date) {
@@ -55,10 +55,7 @@ public class ImportantDatesFragment extends Fragment {
 
             @Override
             public void onDelete(ImportantDate date) {
-                db.importantDateDao().deleteDate(date);
-                Log.d("Fragment", "Fecha eliminada: " + date.getTitle());
-
-                // 🔹 Toast después de eliminar
+                datesViewModel.delete(date); // 🔹 borra en Room + Firebase
                 ((TasksActivity) requireActivity())
                         .showCustomToast("Fecha eliminada correctamente", R.drawable.sorpresa);
             }
@@ -66,11 +63,14 @@ public class ImportantDatesFragment extends Fragment {
 
         recyclerView.setAdapter(adapter);
 
-        // Observa los datos en LiveData
-        db.importantDateDao().getAllDates().observe(getViewLifecycleOwner(), dates -> {
+        // ✅ Observar LiveData desde el ViewModel
+        datesViewModel.getAllDates().observe(getViewLifecycleOwner(), dates -> {
             adapter.setDates(dates);
             Log.d("Fragment", "Observer recibió " + dates.size() + " registros");
         });
+
+        // ✅ Sincronizar con Firebase al iniciar
+        datesViewModel.syncFromFirebase();
 
         return view;
     }
@@ -125,12 +125,10 @@ public class ImportantDatesFragment extends Fragment {
 
             SharedPreferences prefs = requireContext().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
             String userName = prefs.getString("userName", "desconocido");
-            newDate.setAuthor(userName);
+            newDate.setCreatedBy(userName);
 
-            db.importantDateDao().insertDate(newDate);
-            Log.d("Fragment", "Fecha insertada: " + newDate.getTitle());
+            datesViewModel.insert(newDate); // 🔹 guarda en Room + Firebase
 
-            // 🔹 Toast después de guardar
             ((TasksActivity) requireActivity())
                     .showCustomToast("Fecha agregada por " + userName, R.drawable.enamorado);
 
@@ -176,7 +174,6 @@ public class ImportantDatesFragment extends Fragment {
             String description = descriptionInput.getText().toString().trim();
 
             if (title.isEmpty()) {
-                // 🔹 Mostrar toast si el título está vacío
                 ((TasksActivity) requireActivity())
                         .showCustomToast("El título no puede estar vacío", R.drawable.no);
                 return;
@@ -186,10 +183,8 @@ public class ImportantDatesFragment extends Fragment {
             date.setDescription(description);
             date.setDate(selectedDate[0]);
 
-            db.importantDateDao().updateDate(date);
-            Log.d("Fragment", "Fecha actualizada: " + date.getTitle());
+            datesViewModel.update(date); // 🔹 actualiza en Room + Firebase
 
-            // 🔹 Toast después de guardar correctamente
             ((TasksActivity) requireActivity())
                     .showCustomToast("Fecha actualizada correctamente", R.drawable.enamorado);
         });
@@ -204,25 +199,18 @@ public class ImportantDatesFragment extends Fragment {
         builder.setTitle("Editar autor");
 
         EditText authorInput = new EditText(requireContext());
-        authorInput.setText(date.getAuthor());
+        authorInput.setText(date.getCreatedBy());
 
         builder.setView(authorInput);
         builder.setPositiveButton("Guardar", (dialog, which) -> {
             String newAuthor = authorInput.getText().toString().trim();
             if (!newAuthor.isEmpty()) {
-                date.setAuthor(newAuthor);
-                db.importantDateDao().updateDate(date);
+                date.setCreatedBy(newAuthor);
+                datesViewModel.update(date); // 🔹 actualiza en Room + Firebase
 
                 SharedPreferences prefs = requireContext().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
                 prefs.edit().putString("userName", newAuthor).apply();
 
-                // 🔹 Actualizar todos los registros
-                db.taskDao().updateAllAuthors(newAuthor);
-                db.importantDateDao().updateAllAuthors(newAuthor);
-
-                Log.d("Fragment", "Autor actualizado a: " + newAuthor);
-
-                // 🔹 Toast después de guardar
                 ((TasksActivity) requireActivity())
                         .showCustomToast("Autor actualizado correctamente", R.drawable.enamorado);
             } else {

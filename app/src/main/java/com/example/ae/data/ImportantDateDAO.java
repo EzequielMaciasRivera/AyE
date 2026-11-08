@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
@@ -14,29 +15,35 @@ import java.util.List;
 @Dao
 public interface ImportantDateDAO {
 
+    // 🔹 Buscar fecha por firebaseId
+    @Query("SELECT * FROM important_dates WHERE firebaseId = :firebaseId LIMIT 1")
+    ImportantDate findByFirebaseId(String firebaseId);
+
+    // 🔹 Insertar o reemplazar (evita duplicados)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertOrReplace(ImportantDate date);
+
+    // 🔹 Insertar nueva fecha
     @Insert
     void insertDate(ImportantDate date);
 
+    // 🔹 Actualizar fecha
     @Update
     void updateDate(ImportantDate date);
 
+    // 🔹 Eliminar fecha
     @Delete
     void deleteDate(ImportantDate date);
 
-    // 🔹 Obtener todas las fechas ordenadas por fecha
+    // 🔹 Borrar todas las fechas
+    @Query("DELETE FROM important_dates")
+    void clearAll();
+
+    // 🔹 Consultar todas las fechas
     @Query("SELECT * FROM important_dates ORDER BY date ASC")
     LiveData<List<ImportantDate>> getAllDates();
 
-    // 🔹 Actualizar solo el autor
-    @Query("UPDATE important_dates SET author = :author WHERE id = :id")
-    void updateAuthor(int id, String author);
-
-    // 🔹 Contar registros (opcional)
-    @Query("SELECT COUNT(*) FROM important_dates")
-    int getCount();
-
-    @Query("UPDATE important_dates SET author = :newAuthor")
-    void updateAllAuthors(String newAuthor);
-
-
+    // 🔹 Actualizar autor de todas las fechas
+    @Query("UPDATE important_dates SET createdBy = :nuevoAutor")
+    void updateAllAuthors(String nuevoAutor);
 }

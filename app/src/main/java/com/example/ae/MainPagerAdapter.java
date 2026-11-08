@@ -16,7 +16,7 @@ public class MainPagerAdapter extends FragmentStateAdapter {
     public Fragment createFragment(int position) {
         switch (position) {
             case 0: return new PendingTasksFragment();
-            case 1: return new CompletedTasksFragmet();
+            case 1: return new CompletedTasksFragment();
             case 2: return new ImportantDatesFragment();
             default: return new PendingTasksFragment();
         }

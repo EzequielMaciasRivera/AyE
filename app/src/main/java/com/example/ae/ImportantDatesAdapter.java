@@ -61,7 +61,8 @@ public class ImportantDatesAdapter extends RecyclerView.Adapter<ImportantDatesAd
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         holder.dateValue.setText("Fecha: " + sdf.format(new Date(date.getDate())));
-        holder.author.setText("Autor: " + date.getAuthor());
+        holder.author.setText("Autor: " + date.getCreatedBy());
+
 
         // Botón editar fecha/título/descripcion → sin confirmación previa
         holder.editButton.setOnClickListener(v -> listener.onEdit(date));
