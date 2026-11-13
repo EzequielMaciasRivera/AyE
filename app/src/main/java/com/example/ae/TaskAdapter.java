@@ -1,6 +1,7 @@
 package com.example.ae;
 
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,27 +18,54 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.ae.data.AppDatabase;
-import com.example.ae.data.TaskDao;
 import com.example.ae.model.Task;
+import com.example.ae.model.TasksViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
+
+
+    @Override
+    public void submitList(java.util.List<Task> list) {
+
+        Log.d(
+                "ADAPTER_DEBUG",
+                "submitList tamaño = "
+                        + (list == null ? 0 : list.size())
+        );
+
+        if (list != null) {
+
+            for (Task task : list) {
+
+                Log.d(
+                        "ADAPTER_DEBUG",
+                        "Tarea -> "
+                                + task.getTitle()
+                                + " | "
+                                + task.getFirebaseId()
+                );
+            }
+        }
+
+        super.submitList(list);
+    }
 
     public interface OnTaskClickListener {
         void onEdit(Task task);
         void onDelete(Task task);
     }
 
-    private final TaskDao taskDao;
+    private final TasksViewModel tasksViewModel;
     private final OnTaskClickListener listener;
 
-    public TaskAdapter(TaskDao taskDao, OnTaskClickListener listener) {
+    public TaskAdapter(TasksViewModel tasksViewModel, OnTaskClickListener listener) {
         super(DIFF_CALLBACK);
-        this.taskDao = taskDao;
+        this.tasksViewModel = tasksViewModel;
         this.listener = listener;
     }
 
@@ -45,13 +73,42 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
             new DiffUtil.ItemCallback<Task>() {
                 @Override
                 public boolean areItemsTheSame(@NonNull Task oldItem, @NonNull Task newItem) {
-                    return oldItem.getId() == newItem.getId();
+                    // ✅ Compara por firebaseId
+                    return oldItem.getFirebaseId() != null &&
+                            oldItem.getFirebaseId().equals(newItem.getFirebaseId());
                 }
 
                 @Override
-                public boolean areContentsTheSame(@NonNull Task oldItem, @NonNull Task newItem) {
-                    return oldItem.equals(newItem);
+                public boolean areContentsTheSame(
+                        @NonNull Task oldItem,
+                        @NonNull Task newItem) {
+                    Log.d("DIFF_DEBUG",
+                            "oldTitle=" + oldItem.getTitle()
+                                    + " | newTitle=" + newItem.getTitle());
+
+                    return java.util.Objects.equals(
+                            oldItem.getTitle(),
+                            newItem.getTitle())
+
+                            && java.util.Objects.equals(
+                            oldItem.getCreatedBy(),
+                            newItem.getCreatedBy())
+
+                            && java.util.Objects.equals(
+                            oldItem.getDueDate(),
+                            newItem.getDueDate())
+
+                            && java.util.Objects.equals(
+                            oldItem.getCompletedAt(),
+                            newItem.getCompletedAt())
+
+                            && oldItem.isCompleted()
+                            == newItem.isCompleted()
+
+                            && oldItem.getCreatedAt()
+                            == newItem.getCreatedAt();
                 }
+
             };
 
     @NonNull
@@ -65,7 +122,9 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task task = getItem(position);
-        holder.bind(task, taskDao, listener);
+        SharedPreferences prefs = holder.itemView.getContext()
+                .getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
+        holder.bind(task, tasksViewModel, listener, prefs);
     }
 
     static class TaskViewHolder extends RecyclerView.ViewHolder {
@@ -86,7 +145,12 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
             editAuthorButton = itemView.findViewById(R.id.editAuthorButton);
         }
 
-        void bind(Task task, TaskDao taskDao, OnTaskClickListener listener) {
+        void bind(Task task, TasksViewModel tasksViewModel, OnTaskClickListener listener, SharedPreferences prefs) {
+            Log.d(
+                    "BIND_DEBUG",
+                    "hash=" + System.identityHashCode(task)
+                            + " title=" + task.getTitle()
+            );
             taskTitle.setText(task.getTitle());
 
             // Mostrar información extra
@@ -99,10 +163,7 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
             }
             taskInfo.setText(infoExtra);
 
-            SharedPreferences prefs = itemView.getContext()
-                    .getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
             String currentUser = prefs.getString("userName", "").trim();
-
             boolean esAutor = task.getCreatedBy() != null &&
                     task.getCreatedBy().trim().equalsIgnoreCase(currentUser);
 
@@ -116,7 +177,7 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
             taskCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 task.setCompleted(isChecked);
                 task.setCompletedAt(isChecked ? System.currentTimeMillis() : null);
-                taskDao.update(task);
+                tasksViewModel.update(task); // ✅ usa ViewModel
                 showCustomToast(buttonView.getContext(),
                         isChecked ? "Tarea marcada como completada" : "Tarea marcada como pendiente",
                         isChecked ? R.drawable.enamorado : R.drawable.sorpresa);
@@ -134,7 +195,7 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                         .setTitle("Eliminar tarea")
                         .setMessage("¿Seguro que deseas eliminar esta tarea?")
                         .setPositiveButton("Sí", (dialog, which) -> {
-                            taskDao.delete(task);
+
                             listener.onDelete(task);
                             showCustomToast(v.getContext(),
                                     "Tarea eliminada",
@@ -160,12 +221,15 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                         .setPositiveButton("Guardar", (dialog, which) -> {
                             String nuevoTitulo = input.getText().toString().trim();
                             if (!nuevoTitulo.isEmpty()) {
-                                task.setTitle(nuevoTitulo);
-                                taskDao.update(task);
-                                listener.onEdit(task);
+
+                                Task taskActualizada = new Task(task);
+                                taskActualizada.setTitle(nuevoTitulo);
+                                tasksViewModel.update(taskActualizada);
+
                                 showCustomToast(v.getContext(),
                                         "Tarea actualizada correctamente",
                                         R.drawable.enamorado);
+
                             } else {
                                 showCustomToast(v.getContext(),
                                         "El título no puede estar vacío",
@@ -192,14 +256,18 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                         .setPositiveButton("Guardar", (dialog, which) -> {
                             String nuevoAutor = input.getText().toString().trim();
                             if (!nuevoAutor.isEmpty()) {
-                                taskDao.updateAllAuthors(nuevoAutor);
-                                AppDatabase db = AppDatabase.getInstance(v.getContext());
-                                db.importantDateDao().updateAllAuthors(nuevoAutor);
+
+                                Task taskActualizada = new Task(task);
+                                taskActualizada.setCreatedBy(nuevoAutor);
+
+                                tasksViewModel.update(taskActualizada);
+
                                 prefs.edit().putString("userName", nuevoAutor).apply();
+
                                 showCustomToast(v.getContext(),
-                                        "Autor actualizado en tareas y fechas",
+                                        "Autor actualizado correctamente",
                                         R.drawable.enamorado);
-                            } else {
+                            }else {
                                 showCustomToast(v.getContext(),
                                         "El nombre no puede estar vacío",
                                         R.drawable.no);

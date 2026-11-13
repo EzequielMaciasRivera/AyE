@@ -1,46 +1,46 @@
 package com.example.ae;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.ae.data.AppDatabase;
-import com.example.ae.data.TaskDao;
 import com.example.ae.model.Task;
+import com.example.ae.model.TasksViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapter.TaskViewHolder> {
 
     public interface OnTaskClickListener {
         void onEdit(Task task);
-
         void onDelete(Task task);
     }
 
-    private final TaskDao taskDao;
+    private final TasksViewModel tasksViewModel;
     private final OnTaskClickListener listener;
 
-    public CompletedTasksAdapter(TaskDao taskDao, OnTaskClickListener listener) {
+    public CompletedTasksAdapter(TasksViewModel tasksViewModel, OnTaskClickListener listener) {
         super(DIFF_CALLBACK);
-        this.taskDao = taskDao;
+        this.tasksViewModel = tasksViewModel;
         this.listener = listener;
     }
 
@@ -48,12 +48,22 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
             new DiffUtil.ItemCallback<Task>() {
                 @Override
                 public boolean areItemsTheSame(@NonNull Task oldItem, @NonNull Task newItem) {
-                    return oldItem.getId() == newItem.getId();
+                    // ✅ Compara por firebaseId
+                    return oldItem.getFirebaseId() != null &&
+                            oldItem.getFirebaseId().equals(newItem.getFirebaseId());
                 }
 
                 @Override
-                public boolean areContentsTheSame(@NonNull Task oldItem, @NonNull Task newItem) {
-                    return oldItem.equals(newItem);
+                public boolean areContentsTheSame(
+                        @NonNull Task oldItem,
+                        @NonNull Task newItem) {
+
+                    return Objects.equals(oldItem.getTitle(), newItem.getTitle())
+                            && Objects.equals(oldItem.getCreatedBy(), newItem.getCreatedBy())
+                            && Objects.equals(oldItem.getDueDate(), newItem.getDueDate())
+                            && Objects.equals(oldItem.getCompletedAt(), newItem.getCompletedAt())
+                            && oldItem.isCompleted() == newItem.isCompleted()
+                            && oldItem.getCreatedAt() == newItem.getCreatedAt();
                 }
             };
 
@@ -68,7 +78,9 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task task = getItem(position);
-        holder.bind(task, taskDao, listener);
+        SharedPreferences prefs = holder.itemView.getContext()
+                .getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        holder.bind(task, tasksViewModel, listener, prefs);
     }
 
     static class TaskViewHolder extends RecyclerView.ViewHolder {
@@ -89,7 +101,7 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
             editDateButton = itemView.findViewById(R.id.editDateButton);
         }
 
-        void bind(Task task, TaskDao taskDao, OnTaskClickListener listener) {
+        void bind(Task task, TasksViewModel tasksViewModel, OnTaskClickListener listener, SharedPreferences prefs) {
             taskTitle.setText(task.getTitle());
             taskTitle.setPaintFlags(
                     taskTitle.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
@@ -104,10 +116,7 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
             }
             taskInfo.setText(infoExtra);
 
-            SharedPreferences prefs = itemView.getContext()
-                    .getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
             String currentUser = prefs.getString("userName", "").trim();
-
             boolean esAutor = task.getCreatedBy() != null &&
                     task.getCreatedBy().trim().equalsIgnoreCase(currentUser);
 
@@ -128,7 +137,7 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
                         .setTitle("Eliminar tarea")
                         .setMessage("¿Seguro que deseas eliminar esta tarea completada?")
                         .setPositiveButton("Sí", (dialog, which) -> {
-                            taskDao.delete(task);
+                            tasksViewModel.delete(task); // ✅ usa ViewModel
                             listener.onDelete(task);
                             showCustomToast(v.getContext(),
                                     "Tarea eliminada",
@@ -154,8 +163,10 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
                         .setPositiveButton("Guardar", (dialog, which) -> {
                             String nuevoTitulo = input.getText().toString().trim();
                             if (!nuevoTitulo.isEmpty()) {
-                                task.setTitle(nuevoTitulo);
-                                taskDao.update(task);
+                                Task taskActualizada = new Task(task);
+                                taskActualizada.setTitle(nuevoTitulo);
+                                tasksViewModel.update(taskActualizada);
+
                                 listener.onEdit(task);
                                 showCustomToast(v.getContext(),
                                         "Tarea actualizada correctamente",
@@ -186,12 +197,13 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
                         .setPositiveButton("Guardar", (dialog, which) -> {
                             String nuevoAutor = input.getText().toString().trim();
                             if (!nuevoAutor.isEmpty()) {
-                                taskDao.updateAllAuthors(nuevoAutor);
-                                AppDatabase db = AppDatabase.getInstance(v.getContext());
-                                db.importantDateDao().updateAllAuthors(nuevoAutor);
+                                Task taskActualizada = new Task(task);
+                                taskActualizada.setCreatedBy(nuevoAutor);
+                                tasksViewModel.update(taskActualizada);
+
                                 prefs.edit().putString("userName", nuevoAutor).apply();
                                 showCustomToast(v.getContext(),
-                                        "Autor actualizado en tareas y fechas",
+                                        "Autor actualizado correctamente",
                                         R.drawable.enamorado);
                             } else {
                                 showCustomToast(v.getContext(),
@@ -218,8 +230,11 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
                                     (timeView, hourOfDay, minute) -> {
                                         Calendar newDate = Calendar.getInstance();
                                         newDate.set(year, month, dayOfMonth, hourOfDay, minute);
-                                        task.setCompletedAt(newDate.getTimeInMillis());
-                                        taskDao.update(task);
+
+                                        Task taskActualizada = new Task(task);
+                                        taskActualizada.setCompletedAt(newDate.getTimeInMillis());
+                                        tasksViewModel.update(taskActualizada);
+
                                         showCustomToast(v.getContext(),
                                                 "Fecha de completado actualizada",
                                                 R.drawable.enamorado);
@@ -243,7 +258,7 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
             return sdf.format(date);
         }
 
-        private void showCustomToast(android.content.Context context, String message, int iconRes) {
+        private void showCustomToast(Context context, String message, int iconRes) {
             View layout = LayoutInflater.from(context)
                     .inflate(R.layout.custom_toast, null);
 
@@ -256,7 +271,7 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
             Toast toast = new Toast(context);
             toast.setDuration(Toast.LENGTH_SHORT);
             toast.setView(layout);
-            toast.show(); // 🔹 faltaba esta línea
+            toast.show(); // ✅ ahora sí completo
         }
     }
 }

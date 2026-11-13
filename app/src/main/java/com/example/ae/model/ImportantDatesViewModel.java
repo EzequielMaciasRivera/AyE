@@ -26,27 +26,33 @@ public class ImportantDatesViewModel extends AndroidViewModel {
         firebaseRepo = new FirebaseRepository(application);
     }
 
-    public LiveData<List<ImportantDate>> getAllDates() {
-        return allDates;
-    }
+    public LiveData<List<ImportantDate>> getAllDates() { return allDates; }
 
-    // 🔹 Insertar fecha en Room + Firebase
+    // Insertar
     public void insert(ImportantDate date) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             dateDao.insertOrReplace(date);
-            firebaseRepo.saveImportantDate(date);
+            if (date.getFirebaseId() == null || date.getFirebaseId().isEmpty()) {
+                firebaseRepo.saveImportantDate(date);
+            }
         });
     }
 
-    // 🔹 Actualizar fecha en Room + Firebase
+    // Actualizar
+    // ImportantDatesViewModel
     public void update(ImportantDate date) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            ImportantDate existing = dateDao.findByFirebaseId(date.getFirebaseId());
+            if (existing != null) {
+                date.setId(existing.getId()); // conserva id local
+            }
             dateDao.insertOrReplace(date);
-            firebaseRepo.saveImportantDate(date);
+            firebaseRepo.saveImportantDate(date); // ✅ mantiene firebaseId
         });
     }
 
-    // 🔹 Eliminar fecha en Room + Firebase
+
+    // Eliminar
     public void delete(ImportantDate date) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             dateDao.deleteDate(date);
@@ -54,7 +60,7 @@ public class ImportantDatesViewModel extends AndroidViewModel {
         });
     }
 
-    // 🔹 Descargar fechas desde Firebase y sincronizar con Room
+    // Sincronizar desde Firebase
     public void syncFromFirebase() {
         firebaseRepo.fetchImportantDates(dates -> {
             AppDatabase.databaseWriteExecutor.execute(() -> {

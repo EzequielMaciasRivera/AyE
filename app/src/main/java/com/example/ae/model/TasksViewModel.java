@@ -1,14 +1,15 @@
 package com.example.ae.model;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import com.example.ae.data.AppDatabase;
-import com.example.ae.data.TaskDao;
 import com.example.ae.data.FirebaseRepository;
+import com.example.ae.data.TaskDao;
 
 import java.util.List;
 
@@ -20,13 +21,19 @@ public class TasksViewModel extends AndroidViewModel {
 
     public TasksViewModel(@NonNull Application application) {
         super(application);
+
         AppDatabase db = AppDatabase.getInstance(application);
+
         taskDao = db.taskDao();
         allTasks = taskDao.getAllTasks();
-        firebaseRepo = new FirebaseRepository(application); // ✅ pasa el contexto aquí
+
+        firebaseRepo = new FirebaseRepository(application);
     }
 
-    // 🔹 Obtener todas las tareas
+    // ==========================
+    // GETTERS
+    // ==========================
+
     public LiveData<List<Task>> getAllTasks() {
         return allTasks;
     }
@@ -43,46 +50,65 @@ public class TasksViewModel extends AndroidViewModel {
         return taskDao.getUpcomingTasks();
     }
 
-    // 🔹 Insertar tarea en Room + Firebase
+    // ==========================
+    // INSERTAR
+    // ==========================
+
     public void insert(Task task) {
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            taskDao.insert(task);
-            firebaseRepo.saveTask(task);
-        });
+
+        Log.d("INSERT_DEBUG",
+                "ANTES saveTask firebaseId = " + task.getFirebaseId());
+
+        firebaseRepo.saveTask(task);
     }
 
-    // 🔹 Actualizar tarea en Room + Firebase
+    // ==========================
+    // ACTUALIZAR
+    // ==========================
+
     public void update(Task task) {
+
+        Log.d(
+                "UPDATE_DEBUG",
+                "Actualizando tarea -> title="
+                        + task.getTitle()
+                        + " firebaseId="
+                        + task.getFirebaseId()
+        );
+
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            taskDao.update(task);
+
+            taskDao.insertOrReplace(task);
+
             firebaseRepo.saveTask(task);
         });
     }
 
-    // 🔹 Eliminar tarea en Room + Firebase
+    // ==========================
+    // ELIMINAR
+    // ==========================
+
     public void delete(Task task) {
+
         AppDatabase.databaseWriteExecutor.execute(() -> {
+
             taskDao.delete(task);
+
             firebaseRepo.deleteTask(task);
         });
     }
 
-    // 🔹 Descargar tareas desde Firebase y sincronizar con Room
+    // ==========================
+    // SINCRONIZAR DESDE FIREBASE
+    // ==========================
+
     public void syncFromFirebase() {
-        firebaseRepo.fetchTasks(tasks -> {
-            AppDatabase.databaseWriteExecutor.execute(() -> {
-                for (Task task : tasks) {
-                    Task existing = taskDao.findByFirebaseId(task.getFirebaseId());
-                    if (existing == null) {
-                        // Nueva tarea → insertar
-                        taskDao.insertOrReplace(task);
-                    } else {
-                        // Ya existe → conservar id local y actualizar
-                        task.setId(existing.getId());
-                        taskDao.insertOrReplace(task);
-                    }
-                }
-            });
-        });
+
+        Log.d(
+                "SYNC_DEBUG",
+                "syncFromFirebase ejecutado"
+        );
+
+        firebaseRepo.fetchTasks();
     }
 }

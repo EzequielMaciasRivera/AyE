@@ -24,7 +24,6 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -45,11 +44,11 @@ public class TasksActivity extends AppCompatActivity {
     private AppDatabase db;
     private TasksViewModel tasksViewModel;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tasks);
-
 
         // Referencias UI
         TabLayout tabLayout = findViewById(R.id.tabLayout);
@@ -57,17 +56,15 @@ public class TasksActivity extends AppCompatActivity {
         fabAddTask = findViewById(R.id.addTaskButton);
 
         // Inicializar Room
-        db = AppDatabase.getInstance(getApplicationContext());
-        taskDao = db.taskDao();
-
-        // Inicializar ViewModel
+        // ✅ Inicializa el ViewModel primero
         tasksViewModel = new ViewModelProvider(this).get(TasksViewModel.class);
 
-        // 🔹 Observa cambios en las tareas
-        tasksViewModel.getAllTasks().observe(this, tasks -> {
-            // Aquí actualizas tu RecyclerView Adapter
-            // Ejemplo: tasksAdapter.submitList(tasks);
-        });
+        tasksViewModel.syncFromFirebase();
+
+// ✅ Pasa el ViewModel al adapter
+
+
+
 
         // Configurar ViewPager con FragmentStateAdapter
         FragmentStateAdapter adapter = new FragmentStateAdapter(this) {
@@ -128,7 +125,6 @@ public class TasksActivity extends AppCompatActivity {
         // Acción inicial del FAB
         fabAddTask.setImageResource(R.drawable.baseline_add_task_24);
         fabAddTask.setOnClickListener(v -> showAddTaskDialog());
-        tasksViewModel.syncFromFirebase();
     }
 
     // Método de animación fluido
@@ -150,35 +146,6 @@ public class TasksActivity extends AppCompatActivity {
                 .start();
     }
 
-    private void showEditAuthorDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Cambiar autor");
-
-        EditText input = new EditText(this);
-        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        String currentAuthor = prefs.getString("userName", "desconocido");
-        input.setText(currentAuthor);
-
-        builder.setView(input);
-
-        builder.setPositiveButton("Guardar", (dialog, which) -> {
-            String newAuthor = input.getText().toString().trim();
-            if (!newAuthor.isEmpty()) {
-                prefs.edit().putString("userName", newAuthor).apply();
-
-                db.taskDao().updateAllAuthors(newAuthor);
-                db.importantDateDao().updateAllAuthors(newAuthor);
-
-                showCustomToast("Autor actualizado a " + newAuthor, R.drawable.enamorado);
-            } else {
-                showCustomToast("El autor no puede estar vacío", R.drawable.no);
-            }
-        });
-
-        builder.setNegativeButton("Cancelar", null);
-        builder.show();
-    }
-
     private void showAddTaskDialog() {
         EditText input = new EditText(this);
         input.setHint("Escribe el título de la tarea");
@@ -195,7 +162,7 @@ public class TasksActivity extends AppCompatActivity {
 
                         Task newTask = new Task(taskTitle, userName);
 
-                        // 🔹 Guardar en Room + Firebase
+                        // Guardar en Room + Firebase
                         tasksViewModel.insert(newTask);
                         Log.d("TasksActivity", "🟢 Insertando tarea: " + newTask.getTitle());
 
@@ -250,7 +217,6 @@ public class TasksActivity extends AppCompatActivity {
                         newDate.setDate(selectedDate[0]);
                         newDate.setCreatedBy(userName);
 
-                        // 🔹 Guardar en Room + Firebase
                         ImportantDatesViewModel datesViewModel =
                                 new ViewModelProvider(this).get(ImportantDatesViewModel.class);
                         datesViewModel.insert(newDate);
@@ -267,6 +233,13 @@ public class TasksActivity extends AppCompatActivity {
     public void showCustomToast(String message, int iconRes) {
         LayoutInflater inflater = getLayoutInflater();
         View layout = inflater.inflate(R.layout.custom_toast, null);
-
+        TextView text = layout.findViewById(R.id.toastText);
+        text.setText(message);
+        ImageView icon = layout.findViewById(R.id.toastIcon);
+        icon.setImageResource(iconRes);
+        Toast toast = new Toast(this);
+        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.setView(layout);
+        toast.show();
     }
-    }
+}

@@ -16,8 +16,6 @@ import java.util.List;
 public interface TaskDao {
 
     // 🔹 Buscar tarea por firebaseId (clave única de sincronización)
-    @Query("SELECT * FROM tasks WHERE firebaseId = :firebaseId LIMIT 1")
-    Task findByFirebaseId(String firebaseId);
 
     // 🔹 Insertar o reemplazar (evita duplicados)
     @Insert(onConflict = OnConflictStrategy.REPLACE)

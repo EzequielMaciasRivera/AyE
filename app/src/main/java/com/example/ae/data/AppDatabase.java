@@ -14,7 +14,7 @@ import com.example.ae.model.ImportantDate;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Database(entities = {Task.class, ImportantDate.class}, version = 4)
+@Database(entities = {Task.class, ImportantDate.class}, version = 5)
 public abstract class AppDatabase extends RoomDatabase {
 
     private static volatile AppDatabase INSTANCE;

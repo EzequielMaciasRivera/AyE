@@ -1,6 +1,7 @@
 package com.example.ae;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,43 +29,53 @@ public class PendingTasksFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        // 🔹 Corrige el nombre del layout: debe ser fragment_pending_tasks.xml
-        View view = inflater.inflate(R.layout.fragmet_pending_taks, container, false);
+        // ✅ Nombre correcto del layout
+        View view = inflater.inflate(R.layout.fragmet_pending_taks,container, false);
 
         recyclerView = view.findViewById(R.id.pendingRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        // 🔹 Inicializar el ViewModel compartido con la Activity
+
+        // ✅ Inicializar el adapter con TaskDao y listener
+        // ✅ Inicializa el ViewModel primero
         tasksViewModel = new ViewModelProvider(requireActivity()).get(TasksViewModel.class);
 
-        // 🔹 Inicializar el adapter con TaskDao y listener
-        AppDatabase db = AppDatabase.getInstance(requireContext());
-        TaskDao taskDao = db.taskDao();
-
-        adapter = new TaskAdapter(taskDao, new TaskAdapter.OnTaskClickListener() {
+// ✅ Pasa el ViewModel al adapter
+        adapter = new TaskAdapter(tasksViewModel, new TaskAdapter.OnTaskClickListener() {
             @Override
             public void onEdit(Task task) {
-                // Aquí puedes abrir un diálogo para editar y luego llamar a tasksViewModel.update(task)
                 tasksViewModel.update(task);
             }
 
             @Override
             public void onDelete(Task task) {
-                tasksViewModel.delete(task); // 🔹 borra en Room + Firebase
+                tasksViewModel.delete(task);
                 ((TasksActivity) requireActivity())
                         .showCustomToast("Tarea eliminada correctamente", R.drawable.sorpresa);
             }
         });
 
+
         recyclerView.setAdapter(adapter);
 
-        // 🔹 Observar solo las tareas pendientes
-        tasksViewModel.getPendingTasks().observe(getViewLifecycleOwner(), tasks -> {
-            adapter.submitList(tasks);
-        });
+        // ✅ Observar solo las tareas pendientes
+        tasksViewModel.getPendingTasks().observe(
+                getViewLifecycleOwner(),
+                tasks -> {
 
-        // 🔹 Sincronizar con Firebase al iniciar
-        tasksViewModel.syncFromFirebase();
+                    Log.d(
+                            "ROOM_PENDING_DEBUG",
+                            "Pendientes recibidas = "
+                                    + tasks.size()
+                    );
+
+                    adapter.submitList(
+                            tasks == null
+                                    ? null
+                                    : new java.util.ArrayList<>(tasks)
+                    );
+                }
+        );
 
         return view;
     }
