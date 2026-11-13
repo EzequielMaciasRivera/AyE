@@ -164,9 +164,24 @@ public class TasksActivity extends AppCompatActivity {
 
                         // Guardar en Room + Firebase
                         tasksViewModel.insert(newTask);
-                        Log.d("TasksActivity", "🟢 Insertando tarea: " + newTask.getTitle());
 
-                        showCustomToast("Tarea agregada por " + userName, R.drawable.enamorado);
+                        ViewPager2 viewPager = findViewById(R.id.viewPager);
+
+// Si estoy en "Hechas", volver a "Por hacer"
+                        if (viewPager.getCurrentItem() == 1) {
+                            viewPager.setCurrentItem(0, true);
+                        }
+
+                        Log.d(
+                                "TasksActivity",
+                                "🟢 Insertando tarea: "
+                                        + newTask.getTitle()
+                        );
+
+                        showCustomToast(
+                                "Tarea agregada por " + userName,
+                                R.drawable.enamorado
+                        );
                     } else {
                         showCustomToast("El título no puede estar vacío", R.drawable.no);
                     }
