@@ -14,12 +14,13 @@ import java.util.List;
 
 @Dao
 public interface TaskDao {
-
-    // 🔹 Buscar tarea por firebaseId (clave única de sincronización)
-
-    // 🔹 Insertar o reemplazar (evita duplicados)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertOrReplace(Task task);
+    @Query("DELETE FROM tasks")
+    void deleteAll();
+
+    @Query("DELETE FROM tasks WHERE firebaseId NOT IN (:ids)")
+    void deleteTasksNotIn(List<String> ids);
 
     // 🔹 Insertar nueva tarea (cuando no existe en Firebase aún)
     @Insert

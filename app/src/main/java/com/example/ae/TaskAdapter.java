@@ -219,8 +219,8 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                         .setTitle("Editar tarea")
                         .setView(input)
                         .setPositiveButton("Guardar", (dialog, which) -> {
-                            String nuevoTitulo = input.getText().toString().trim();
-                            if (!nuevoTitulo.isEmpty()) {
+                            String nuevoTitulo = input.getText().toString();
+                            if (!nuevoTitulo.trim().isEmpty()) {
 
                                 Task taskActualizada = new Task(task);
                                 taskActualizada.setTitle(nuevoTitulo);

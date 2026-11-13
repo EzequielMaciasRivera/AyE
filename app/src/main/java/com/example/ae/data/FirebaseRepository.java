@@ -29,7 +29,10 @@ public class FirebaseRepository {
     public void saveTask(Task task) {
 
         if (task.getFirebaseId() == null || task.getFirebaseId().isEmpty()) {
-
+            Log.d(
+                    "SPACE_DEBUG",
+                    "[" + task.getTitle() + "]"
+            );
             String newId = db.collection("tasks")
                     .document()
                     .getId();
@@ -116,12 +119,24 @@ public class FirebaseRepository {
     public void fetchTasks() {
 
         db.collection("tasks")
-                .get()
-                .addOnSuccessListener(query -> {
+                .addSnapshotListener((value, error) -> {
+
+                    if (error != null) {
+                        Log.e(
+                                "FirebaseRepo",
+                                "Error escuchando cambios",
+                                error
+                        );
+                        return;
+                    }
+
+                    if (value == null) {
+                        return;
+                    }
 
                     List<Task> tasks = new ArrayList<>();
 
-                    for (DocumentSnapshot doc : query.getDocuments()) {
+                    for (DocumentSnapshot doc : value.getDocuments()) {
 
                         Task task = doc.toObject(Task.class);
 
@@ -135,29 +150,30 @@ public class FirebaseRepository {
 
                     AppDatabase.databaseWriteExecutor.execute(() -> {
 
-                        TaskDao taskDao =
+                        TaskDao dao =
                                 AppDatabase.getInstance(context)
                                         .taskDao();
 
-                        for (Task task : tasks) {
+                        if (tasks.isEmpty()) {
 
-                            taskDao.insertOrReplace(task);
+                            dao.deleteAll();
+
+                        } else {
+
+                            List<String> firebaseIds = new ArrayList<>();
+
+                            for (Task task : tasks) {
+
+                                firebaseIds.add(task.getFirebaseId());
+
+                                dao.insertOrReplace(task);
+                            }
+
+                            dao.deleteTasksNotIn(firebaseIds);
                         }
-
-                        Log.d(
-                                "FirebaseRepo",
-                                "✅ Sincronizadas " +
-                                        tasks.size() +
-                                        " tareas desde Firebase"
-                        );
                     });
-                })
-                .addOnFailureListener(e ->
-                        Log.e(
-                                "FirebaseRepo",
-                                "❌ Error al obtener tareas",
-                                e
-                        ));
+
+                });
     }
 
     // ==============================
@@ -186,6 +202,7 @@ public class FirebaseRepository {
                         AppDatabase.databaseWriteExecutor.execute(() ->
                                 AppDatabase.getInstance(context)
                                         .importantDateDao()
+
                                         .insertOrReplace(date));
                     })
                     .addOnFailureListener(e ->

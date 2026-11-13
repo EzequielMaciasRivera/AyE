@@ -55,11 +55,7 @@ public class CompletedTasksFragment extends Fragment {
 
         // ✅ Observar solo las tareas completadas
         tasksViewModel.getCompletedTasks().observe(getViewLifecycleOwner(), tasks -> {
-            Log.d(
-                    "REFRESH_DEBUG",
-                    "Título recibido = "
-                            + tasks.get(0).getTitle()
-            );
+
 
             adapter.submitList(
                     tasks == null

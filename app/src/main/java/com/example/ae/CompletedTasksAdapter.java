@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -161,13 +162,18 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
                         .setTitle("Editar tarea completada")
                         .setView(input)
                         .setPositiveButton("Guardar", (dialog, which) -> {
-                            String nuevoTitulo = input.getText().toString().trim();
-                            if (!nuevoTitulo.isEmpty()) {
+                            String nuevoTitulo = input.getText().toString();
+                            if (!nuevoTitulo.trim().isEmpty()) {
                                 Task taskActualizada = new Task(task);
                                 taskActualizada.setTitle(nuevoTitulo);
                                 tasksViewModel.update(taskActualizada);
 
-                                listener.onEdit(task);
+
+
+                                Log.d(
+                                        "SPACE_DEBUG",
+                                        "[" + task.getTitle() + "]"
+                                );
                                 showCustomToast(v.getContext(),
                                         "Tarea actualizada correctamente",
                                         R.drawable.enamorado);
