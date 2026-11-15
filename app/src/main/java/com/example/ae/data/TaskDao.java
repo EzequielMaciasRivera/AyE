@@ -14,6 +14,8 @@ import java.util.List;
 
 @Dao
 public interface TaskDao {
+
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertOrReplace(Task task);
     @Query("DELETE FROM tasks")
@@ -59,6 +61,21 @@ public interface TaskDao {
     LiveData<List<Task>> getTasksByUser(String userName);
 
     // 🔹 Actualizar el autor de todas las tareas
-    @Query("UPDATE tasks SET createdBy = :nuevoAutor")
-    void updateAllAuthors(String nuevoAutor);
+    @Query(
+            "SELECT * FROM tasks " +
+                    "WHERE ownerId = :ownerId"
+    )
+    List<Task> getTasksByOwnerId(
+            String ownerId
+    );
+    @Query(
+            "UPDATE tasks " +
+                    "SET createdBy = :nuevoAutor " +
+                    "WHERE ownerId = :ownerId"
+    )
+
+    void updateAuthor(
+            String ownerId,
+            String nuevoAutor
+    );
 }

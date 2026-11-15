@@ -162,7 +162,25 @@ public class TasksActivity extends AppCompatActivity {
 
                         Task newTask = new Task(taskTitle, userName);
 
-                        // Guardar en Room + Firebase
+                        String ownerId = prefs.getString(
+                                "ownerId",
+                                null
+                        );
+
+                        if (ownerId == null) {
+
+                            ownerId = java.util.UUID
+                                    .randomUUID()
+                                    .toString();
+
+                            prefs.edit()
+                                    .putString("ownerId", ownerId)
+                                    .apply();
+                        }
+
+                        newTask.setCreatedBy(userName);
+                        newTask.setOwnerId(ownerId);
+
                         tasksViewModel.insert(newTask);
 
                         ViewPager2 viewPager = findViewById(R.id.viewPager);

@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.ae.model.Task;
 import com.example.ae.model.TasksViewModel;
 
+import java.util.ArrayList;
+
 public class CompletedTasksFragment extends Fragment {
 
     private RecyclerView recyclerView;
@@ -54,18 +56,33 @@ public class CompletedTasksFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         // ✅ Observar solo las tareas completadas
-        tasksViewModel.getCompletedTasks().observe(getViewLifecycleOwner(), tasks -> {
+        tasksViewModel.getCompletedTasks().observe(
+                getViewLifecycleOwner(),
+                tasks -> {
+                    Log.d(
+                            "COMPLETED_LIST",
+                            "Tareas recibidas: " + tasks.size()
+                    );
+                    Log.e(
+                            "COMPLETED_DEBUG",
+                            "Cantidad completadas = "
+                                    + (tasks == null ? "NULL" : tasks.size())
+                    );
 
-
-            adapter.submitList(
-                    tasks == null
-                            ? null
-                            : new java.util.ArrayList<>(tasks)
-            );
-
-            // 🔹 Sincronizar solo si la DB local está vacía
-
-        });
+                    requireActivity().runOnUiThread(() ->
+                            android.widget.Toast.makeText(
+                                    requireContext(),
+                                    "Observe ejecutado",
+                                    android.widget.Toast.LENGTH_LONG
+                            ).show()
+                    );
+                    adapter.submitList(
+                            tasks == null
+                                    ? null
+                                    : new ArrayList<>(tasks)
+                    );
+                }
+        );
 
         return view;
     }

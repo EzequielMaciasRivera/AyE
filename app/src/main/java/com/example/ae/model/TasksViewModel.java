@@ -66,6 +66,52 @@ public class TasksViewModel extends AndroidViewModel {
     // ACTUALIZAR
     // ==========================
 
+
+    public void updateAuthor(
+            String ownerId,
+            String nuevoAutor
+    ) {
+
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+
+            taskDao.updateAuthor(
+                    ownerId,
+                    nuevoAutor
+            );
+
+        });
+    }
+
+    public void updateAuthorForAllTasks(
+            String ownerId,
+            String nuevoAutor
+    ) {
+
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+
+            taskDao.updateAuthor(
+                    ownerId,
+                    nuevoAutor
+            );
+
+            List<Task> tasks =
+                    taskDao.getTasksByOwnerId(
+                            ownerId
+                    );
+
+            for (Task task : tasks) {
+
+                task.setCreatedBy(
+                        nuevoAutor
+                );
+
+                firebaseRepo.saveTask(
+                        task
+                );
+            }
+        });
+    }
+
     public void update(Task task) {
 
         Log.d(

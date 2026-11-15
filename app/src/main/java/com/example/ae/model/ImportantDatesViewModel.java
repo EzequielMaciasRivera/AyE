@@ -39,15 +39,14 @@ public class ImportantDatesViewModel extends AndroidViewModel {
     }
 
     // Actualizar
-    // ImportantDatesViewModel
     public void update(ImportantDate date) {
+
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            ImportantDate existing = dateDao.findByFirebaseId(date.getFirebaseId());
-            if (existing != null) {
-                date.setId(existing.getId()); // conserva id local
-            }
+
             dateDao.insertOrReplace(date);
-            firebaseRepo.saveImportantDate(date); // ✅ mantiene firebaseId
+
+            firebaseRepo.saveImportantDate(date);
+
         });
     }
 
@@ -62,18 +61,8 @@ public class ImportantDatesViewModel extends AndroidViewModel {
 
     // Sincronizar desde Firebase
     public void syncFromFirebase() {
-        firebaseRepo.fetchImportantDates(dates -> {
-            AppDatabase.databaseWriteExecutor.execute(() -> {
-                for (ImportantDate date : dates) {
-                    ImportantDate existing = dateDao.findByFirebaseId(date.getFirebaseId());
-                    if (existing == null) {
-                        dateDao.insertOrReplace(date);
-                    } else {
-                        date.setId(existing.getId()); // ✅ conserva id local
-                        dateDao.insertOrReplace(date);
-                    }
-                }
-            });
-        });
+
+        firebaseRepo.fetchImportantDates();
+
     }
 }

@@ -248,34 +248,81 @@ public class FirebaseRepository {
                                 e));
     }
 
-    public void fetchImportantDates(
-            Consumer<List<ImportantDate>> callback) {
+    public void fetchImportantDates() {
 
         db.collection("ImportantDates")
-                .get()
-                .addOnSuccessListener(query -> {
+                .addSnapshotListener((value, error) -> {
 
-                    List<ImportantDate> dates = new ArrayList<>();
+                    if (error != null) {
 
-                    for (DocumentSnapshot doc : query.getDocuments()) {
+                        Log.e(
+                                "FirebaseRepo",
+                                "Error escuchando fechas",
+                                error
+                        );
+
+                        return;
+                    }
+
+                    if (value == null) {
+                        return;
+                    }
+
+                    List<ImportantDate> dates =
+                            new ArrayList<>();
+
+                    for (DocumentSnapshot doc :
+                            value.getDocuments()) {
 
                         ImportantDate date =
-                                doc.toObject(ImportantDate.class);
+                                doc.toObject(
+                                        ImportantDate.class
+                                );
 
                         if (date != null) {
 
-                            date.setFirebaseId(doc.getId());
+                            date.setFirebaseId(
+                                    doc.getId()
+                            );
 
                             dates.add(date);
                         }
                     }
 
-                    callback.accept(dates);
-                })
-                .addOnFailureListener(e ->
-                        Log.e("FirebaseRepo",
-                                "❌ Error al obtener fechas",
-                                e));
+                    AppDatabase.databaseWriteExecutor.execute(() -> {
+
+                        ImportantDateDAO dao =
+                                AppDatabase
+                                        .getInstance(context)
+                                        .importantDateDao();
+
+                        if (dates.isEmpty()) {
+
+                            dao.deleteAll();
+
+                        } else {
+
+                            List<String> firebaseIds =
+                                    new ArrayList<>();
+
+                            for (ImportantDate date :
+                                    dates) {
+
+                                firebaseIds.add(
+                                        date.getFirebaseId()
+                                );
+
+                                dao.insertOrReplace(
+                                        date
+                                );
+                            }
+
+                            dao.deleteDatesNotIn(
+                                    firebaseIds
+                            );
+                        }
+                    });
+                });
     }
 
     // ==============================

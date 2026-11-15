@@ -65,8 +65,31 @@ public class ImportantDatesFragment extends Fragment {
 
         // ✅ Observar LiveData desde el ViewModel
         datesViewModel.getAllDates().observe(getViewLifecycleOwner(), dates -> {
-            adapter.setDates(dates);
-            Log.d("Fragment", "Observer recibió " + dates.size() + " registros");
+
+            Log.d(
+                    "DATES_DEBUG",
+                    "Observer recibió "
+                            + dates.size()
+                            + " registros"
+            );
+
+            if (!dates.isEmpty()) {
+
+                Log.d(
+                        "DATES_DEBUG",
+                        "Primer elemento: "
+                                + dates.get(0).getTitle()
+                                + " | "
+                                + dates.get(0).getFirebaseId()
+                );
+            }
+
+            adapter.setDates(
+                    dates == null
+                            ? new java.util.ArrayList<>()
+                            : new java.util.ArrayList<>(dates)
+            );
+
         });
 
         // ✅ Sincronizar con Firebase al iniciar
@@ -138,87 +161,197 @@ public class ImportantDatesFragment extends Fragment {
 
     // 🔹 Diálogo para editar fecha
     private void showEditDateDialog(ImportantDate date) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+
+        AlertDialog.Builder builder =
+                new AlertDialog.Builder(requireContext());
+
         builder.setTitle("Editar fecha importante");
 
-        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_date, null);
-        EditText titleInput = dialogView.findViewById(R.id.editTitle);
-        EditText descriptionInput = dialogView.findViewById(R.id.editDescription);
-        Button dateButton = dialogView.findViewById(R.id.btnPickDate);
+        View dialogView =
+                LayoutInflater.from(getContext())
+                        .inflate(
+                                R.layout.dialog_add_date,
+                                null
+                        );
+
+        EditText titleInput =
+                dialogView.findViewById(R.id.editTitle);
+
+        EditText descriptionInput =
+                dialogView.findViewById(R.id.editDescription);
+
+        Button dateButton =
+                dialogView.findViewById(R.id.btnPickDate);
 
         titleInput.setText(date.getTitle());
         descriptionInput.setText(date.getDescription());
 
         final long[] selectedDate = {date.getDate()};
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        dateButton.setText(sdf.format(new Date(selectedDate[0])));
+
+        SimpleDateFormat sdf =
+                new SimpleDateFormat(
+                        "dd/MM/yyyy",
+                        Locale.getDefault()
+                );
+
+        dateButton.setText(
+                sdf.format(
+                        new Date(selectedDate[0])
+                )
+        );
 
         dateButton.setOnClickListener(v -> {
+
             Calendar calendar = Calendar.getInstance();
-            DatePickerDialog datePicker = new DatePickerDialog(requireContext(),
-                    (view, year, month, dayOfMonth) -> {
-                        Calendar chosen = Calendar.getInstance();
-                        chosen.set(year, month, dayOfMonth);
-                        selectedDate[0] = chosen.getTimeInMillis();
-                        dateButton.setText(dayOfMonth + "/" + (month + 1) + "/" + year);
-                    },
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH));
+
+            DatePickerDialog datePicker =
+                    new DatePickerDialog(
+                            requireContext(),
+                            (view, year, month, dayOfMonth) -> {
+
+                                Calendar chosen =
+                                        Calendar.getInstance();
+
+                                chosen.set(
+                                        year,
+                                        month,
+                                        dayOfMonth
+                                );
+
+                                selectedDate[0] =
+                                        chosen.getTimeInMillis();
+
+                                dateButton.setText(
+                                        dayOfMonth + "/"
+                                                + (month + 1)
+                                                + "/"
+                                                + year
+                                );
+                            },
+                            calendar.get(Calendar.YEAR),
+                            calendar.get(Calendar.MONTH),
+                            calendar.get(Calendar.DAY_OF_MONTH)
+                    );
+
             datePicker.show();
         });
 
         builder.setView(dialogView);
-        builder.setPositiveButton("Guardar", (dialog, which) -> {
-            String title = titleInput.getText().toString().trim();
-            String description = descriptionInput.getText().toString().trim();
 
-            if (title.isEmpty()) {
-                ((TasksActivity) requireActivity())
-                        .showCustomToast("El título no puede estar vacío", R.drawable.no);
-                return;
-            }
+        builder.setPositiveButton(
+                "Guardar",
+                (dialog, which) -> {
 
-            date.setTitle(title);
-            date.setDescription(description);
-            date.setDate(selectedDate[0]);
+                    String title =
+                            titleInput.getText()
+                                    .toString()
+                                    .trim();
 
-            datesViewModel.update(date); // 🔹 actualiza en Room + Firebase
+                    String description =
+                            descriptionInput.getText()
+                                    .toString()
+                                    .trim();
 
-            ((TasksActivity) requireActivity())
-                    .showCustomToast("Fecha actualizada correctamente", R.drawable.enamorado);
-        });
+                    if (title.isEmpty()) {
+
+                        ((TasksActivity) requireActivity())
+                                .showCustomToast(
+                                        "El título no puede estar vacío",
+                                        R.drawable.no
+                                );
+
+                        return;
+                    }
+
+                    ImportantDate updatedDate =
+                            new ImportantDate(date);
+
+                    updatedDate.setTitle(title);
+                    updatedDate.setDescription(description);
+                    updatedDate.setDate(selectedDate[0]);
+
+                    datesViewModel.update(updatedDate);
+
+                    ((TasksActivity) requireActivity())
+                            .showCustomToast(
+                                    "Fecha actualizada correctamente",
+                                    R.drawable.enamorado
+                            );
+                });
 
         builder.setNegativeButton("Cancelar", null);
+
         builder.show();
     }
 
     // 🔹 Diálogo para editar autor
     private void showEditAuthorDialog(ImportantDate date) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+
+        AlertDialog.Builder builder =
+                new AlertDialog.Builder(requireContext());
+
         builder.setTitle("Editar autor");
 
-        EditText authorInput = new EditText(requireContext());
+        EditText authorInput =
+                new EditText(requireContext());
+
         authorInput.setText(date.getCreatedBy());
 
         builder.setView(authorInput);
-        builder.setPositiveButton("Guardar", (dialog, which) -> {
-            String newAuthor = authorInput.getText().toString().trim();
-            if (!newAuthor.isEmpty()) {
-                date.setCreatedBy(newAuthor);
-                datesViewModel.update(date); // 🔹 actualiza en Room + Firebase
 
-                SharedPreferences prefs = requireContext().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
-                prefs.edit().putString("userName", newAuthor).apply();
+        builder.setPositiveButton(
+                "Guardar",
+                (dialog, which) -> {
 
-                ((TasksActivity) requireActivity())
-                        .showCustomToast("Autor actualizado correctamente", R.drawable.enamorado);
-            } else {
-                ((TasksActivity) requireActivity())
-                        .showCustomToast("El autor no puede estar vacío", R.drawable.no);
-            }
-        });
-        builder.setNegativeButton("Cancelar", null);
+                    String newAuthor =
+                            authorInput.getText()
+                                    .toString()
+                                    .trim();
+
+                    if (!newAuthor.isEmpty()) {
+
+                        ImportantDate updatedDate =
+                                new ImportantDate(date);
+
+                        updatedDate.setCreatedBy(newAuthor);
+
+                        datesViewModel.update(updatedDate);
+
+                        SharedPreferences prefs =
+                                requireContext()
+                                        .getSharedPreferences(
+                                                "AppPrefs",
+                                                Context.MODE_PRIVATE
+                                        );
+
+                        prefs.edit()
+                                .putString(
+                                        "userName",
+                                        newAuthor
+                                )
+                                .apply();
+
+                        ((TasksActivity) requireActivity())
+                                .showCustomToast(
+                                        "Autor actualizado correctamente",
+                                        R.drawable.enamorado
+                                );
+
+                    } else {
+
+                        ((TasksActivity) requireActivity())
+                                .showCustomToast(
+                                        "El autor no puede estar vacío",
+                                        R.drawable.no
+                                );
+                    }
+                });
+
+        builder.setNegativeButton(
+                "Cancelar",
+                null
+        );
+
         builder.show();
     }
 }

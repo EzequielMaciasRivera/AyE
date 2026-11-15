@@ -79,6 +79,8 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task task = getItem(position);
+
+        Log.d("ADAPTER_TEST", "onBindViewHolder posición=" + position);
         SharedPreferences prefs = holder.itemView.getContext()
                 .getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
         holder.bind(task, tasksViewModel, listener, prefs);
@@ -103,6 +105,10 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
         }
 
         void bind(Task task, TasksViewModel tasksViewModel, OnTaskClickListener listener, SharedPreferences prefs) {
+            Log.d(
+                    "COMPLETED_BIND",
+                    "Título = " + task.getTitle()
+            );
             taskTitle.setText(task.getTitle());
             taskTitle.setPaintFlags(
                     taskTitle.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
@@ -117,14 +123,62 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
             }
             taskInfo.setText(infoExtra);
 
-            String currentUser = prefs.getString("userName", "").trim();
-            boolean esAutor = task.getCreatedBy() != null &&
-                    task.getCreatedBy().trim().equalsIgnoreCase(currentUser);
+            String currentUser = prefs.getString("userName", "").trim();showCustomToast(
+                    itemView.getContext(),
+                    "Autor=" + task.getCreatedBy()
+                            + " | User=" + currentUser,
+                    R.drawable.sorpresa
+            );
+           // boolean esAutor = task.getCreatedBy() != null &&
+           //       task.getCreatedBy().trim().equalsIgnoreCase(currentUser);
+            String currentOwnerId =
+                    prefs.getString(
+                            "ownerId",
+                            ""
+                    );
 
-            editButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
-            deleteButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
-            editAuthorButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
-            editDateButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+            Log.d(
+                    "OWNER_TEST",
+                    "taskOwnerId=" + task.getOwnerId()
+                            + " currentOwnerId=" + currentOwnerId
+            );
+            showCustomToast(
+                    itemView.getContext(),
+                    "Owner tarea=" + task.getOwnerId()
+                            + "\nOwner actual=" + currentOwnerId,
+                    R.drawable.sorpresa
+            );
+
+            boolean esAutor =
+                    task.getOwnerId() != null
+                            && task.getOwnerId()
+                            .equals(currentOwnerId);
+            Log.d(
+                    "OWNER_TEST",
+                    "esAutor=" + esAutor
+            );
+
+            editButton.setVisibility(
+                    esAutor ? View.VISIBLE : View.GONE
+            );
+
+            deleteButton.setVisibility(
+                    esAutor ? View.VISIBLE : View.GONE
+            );
+
+            editAuthorButton.setVisibility(
+                    esAutor ? View.VISIBLE : View.GONE
+            );
+
+            editDateButton.setVisibility(
+                    esAutor ? View.VISIBLE : View.GONE
+            );
+
+           //editButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+          // deleteButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+          // editAuthorButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+         //  editDateButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+
 
             // Botón eliminar
             deleteButton.setOnClickListener(v -> {
@@ -162,25 +216,48 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
                         .setTitle("Editar tarea completada")
                         .setView(input)
                         .setPositiveButton("Guardar", (dialog, which) -> {
-                            String nuevoTitulo = input.getText().toString();
-                            if (!nuevoTitulo.trim().isEmpty()) {
-                                Task taskActualizada = new Task(task);
-                                taskActualizada.setTitle(nuevoTitulo);
-                                tasksViewModel.update(taskActualizada);
 
+                            String nuevoAutor =
+                                    input.getText().toString().trim();
 
+                            if (!nuevoAutor.isEmpty()) {
 
-                                Log.d(
-                                        "SPACE_DEBUG",
-                                        "[" + task.getTitle() + "]"
+                                tasksViewModel.updateAuthorForAllTasks(
+                                        currentOwnerId,
+                                        nuevoAutor
                                 );
-                                showCustomToast(v.getContext(),
-                                        "Tarea actualizada correctamente",
-                                        R.drawable.enamorado);
+
+                                Task taskActualizada =
+                                        new Task(task);
+
+                                taskActualizada.setCreatedBy(
+                                        nuevoAutor
+                                );
+
+                                tasksViewModel.update(
+                                        taskActualizada
+                                );
+
+                                prefs.edit()
+                                        .putString(
+                                                "userName",
+                                                nuevoAutor
+                                        )
+                                        .apply();
+
+                                showCustomToast(
+                                        v.getContext(),
+                                        "Autor actualizado correctamente",
+                                        R.drawable.enamorado
+                                );
+
                             } else {
-                                showCustomToast(v.getContext(),
-                                        "El título no puede estar vacío",
-                                        R.drawable.no);
+
+                                showCustomToast(
+                                        v.getContext(),
+                                        "El nombre no puede estar vacío",
+                                        R.drawable.no
+                                );
                             }
                         })
                         .setNegativeButton("Cancelar", null)
@@ -195,26 +272,38 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
                             R.drawable.no);
                     return;
                 }
+
+
                 EditText input = new EditText(v.getContext());
                 input.setText(task.getCreatedBy());
                 new AlertDialog.Builder(v.getContext())
                         .setTitle("Editar autor")
                         .setView(input)
                         .setPositiveButton("Guardar", (dialog, which) -> {
-                            String nuevoAutor = input.getText().toString().trim();
-                            if (!nuevoAutor.isEmpty()) {
-                                Task taskActualizada = new Task(task);
-                                taskActualizada.setCreatedBy(nuevoAutor);
-                                tasksViewModel.update(taskActualizada);
 
-                                prefs.edit().putString("userName", nuevoAutor).apply();
-                                showCustomToast(v.getContext(),
+                            String nuevoAutor =
+                                    input.getText().toString().trim();
+
+                            if (!nuevoAutor.isEmpty()) {
+
+                                tasksViewModel.updateAuthorForAllTasks(
+                                        currentOwnerId,
+                                        nuevoAutor
+                                );
+
+
+                                prefs.edit()
+                                        .putString(
+                                                "userName",
+                                                nuevoAutor
+                                        )
+                                        .apply();
+
+                                showCustomToast(
+                                        v.getContext(),
                                         "Autor actualizado correctamente",
-                                        R.drawable.enamorado);
-                            } else {
-                                showCustomToast(v.getContext(),
-                                        "El nombre no puede estar vacío",
-                                        R.drawable.no);
+                                        R.drawable.enamorado
+                                );
                             }
                         })
                         .setNegativeButton("Cancelar", null)

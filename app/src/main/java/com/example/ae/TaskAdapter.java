@@ -163,9 +163,15 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
             }
             taskInfo.setText(infoExtra);
 
-            String currentUser = prefs.getString("userName", "").trim();
-            boolean esAutor = task.getCreatedBy() != null &&
-                    task.getCreatedBy().trim().equalsIgnoreCase(currentUser);
+            String currentOwnerId =
+                    prefs.getString(
+                            "ownerId",
+                            ""
+                    );
+
+            boolean esAutor =
+                    task.getOwnerId() != null
+                            && task.getOwnerId().equals(currentOwnerId);
 
             editButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
             deleteButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
@@ -222,10 +228,6 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                             String nuevoTitulo = input.getText().toString();
                             if (!nuevoTitulo.trim().isEmpty()) {
 
-                                Task taskActualizada = new Task(task);
-                                taskActualizada.setTitle(nuevoTitulo);
-                                tasksViewModel.update(taskActualizada);
-
                                 showCustomToast(v.getContext(),
                                         "Tarea actualizada correctamente",
                                         R.drawable.enamorado);
@@ -242,35 +244,45 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
 
             // Botón editar autor
             editAuthorButton.setOnClickListener(v -> {
-                if (!esAutor) {
-                    showCustomToast(v.getContext(),
-                            "Solo el autor puede editar su nombre",
-                            R.drawable.no);
-                    return;
-                }
+
                 EditText input = new EditText(v.getContext());
                 input.setText(task.getCreatedBy());
+
                 new AlertDialog.Builder(v.getContext())
                         .setTitle("Editar autor")
                         .setView(input)
                         .setPositiveButton("Guardar", (dialog, which) -> {
-                            String nuevoAutor = input.getText().toString().trim();
+
+                            String nuevoAutor =
+                                    input.getText().toString().trim();
+
                             if (!nuevoAutor.isEmpty()) {
 
-                                Task taskActualizada = new Task(task);
-                                taskActualizada.setCreatedBy(nuevoAutor);
+                                tasksViewModel.updateAuthorForAllTasks(
+                                        currentOwnerId,
+                                        nuevoAutor
+                                );
 
-                                tasksViewModel.update(taskActualizada);
+                                prefs.edit()
+                                        .putString(
+                                                "userName",
+                                                nuevoAutor
+                                        )
+                                        .apply();
 
-                                prefs.edit().putString("userName", nuevoAutor).apply();
-
-                                showCustomToast(v.getContext(),
+                                showCustomToast(
+                                        v.getContext(),
                                         "Autor actualizado correctamente",
-                                        R.drawable.enamorado);
-                            }else {
-                                showCustomToast(v.getContext(),
+                                        R.drawable.enamorado
+                                );
+
+                            } else {
+
+                                showCustomToast(
+                                        v.getContext(),
                                         "El nombre no puede estar vacío",
-                                        R.drawable.no);
+                                        R.drawable.no
+                                );
                             }
                         })
                         .setNegativeButton("Cancelar", null)

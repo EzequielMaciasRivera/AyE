@@ -1,6 +1,7 @@
 package com.example.ae.model;
 
 import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -8,7 +9,8 @@ import java.util.Objects;
 
 @Entity(tableName = "tasks")
 public class Task {
-
+    @ColumnInfo(name = "ownerId")
+    private String ownerId;
     @PrimaryKey
     @NonNull
     private String firebaseId = "";
@@ -37,6 +39,7 @@ public class Task {
         this.dueDate = other.dueDate;
         this.createdBy = other.createdBy;
         this.completedAt = other.completedAt;
+        this.ownerId = other.ownerId;
     }
 
     @NonNull
@@ -94,6 +97,14 @@ public class Task {
 
     public void setCompletedAt(Long completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
 
     @Override
