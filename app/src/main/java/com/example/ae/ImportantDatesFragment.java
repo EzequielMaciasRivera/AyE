@@ -72,23 +72,7 @@ public class ImportantDatesFragment extends Fragment {
         // ✅ Observar LiveData desde el ViewModel
         datesViewModel.getAllDates().observe(getViewLifecycleOwner(), dates -> {
 
-            Log.d(
-                    "DATES_DEBUG",
-                    "Observer recibió "
-                            + dates.size()
-                            + " registros"
-            );
 
-            if (!dates.isEmpty()) {
-
-                Log.d(
-                        "DATES_DEBUG",
-                        "Primer elemento: "
-                                + dates.get(0).getTitle()
-                                + " | "
-                                + dates.get(0).getFirebaseId()
-                );
-            }
 
             adapter.setDates(
                     dates == null

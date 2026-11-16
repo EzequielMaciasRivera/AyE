@@ -75,23 +75,9 @@ public class CompletedTasksFragment extends Fragment {
         tasksViewModel.getCompletedTasks().observe(
                 getViewLifecycleOwner(),
                 tasks -> {
-                    Log.d(
-                            "COMPLETED_LIST",
-                            "Tareas recibidas: " + tasks.size()
-                    );
-                    Log.e(
-                            "COMPLETED_DEBUG",
-                            "Cantidad completadas = "
-                                    + (tasks == null ? "NULL" : tasks.size())
-                    );
 
-                    requireActivity().runOnUiThread(() ->
-                            android.widget.Toast.makeText(
-                                    requireContext(),
-                                    "Observe ejecutado",
-                                    android.widget.Toast.LENGTH_LONG
-                            ).show()
-                    );
+
+
                     adapter.submitList(
                             tasks == null
                                     ? null

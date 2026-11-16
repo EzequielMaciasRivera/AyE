@@ -2,5 +2,6 @@
     <!-- Estado seleccionado -->
     <item android:color="#FD3E6E" android:state_selected="true"/>
     <!-- Estado normal -->
-    <item android:color="#FFFFFF"/>
+    <item
+        android:color="?android:textColorSecondary"/>
 </selector>

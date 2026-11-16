@@ -32,26 +32,6 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
     @Override
     public void submitList(java.util.List<Task> list) {
 
-        Log.d(
-                "ADAPTER_DEBUG",
-                "submitList tamaño = "
-                        + (list == null ? 0 : list.size())
-        );
-
-        if (list != null) {
-
-            for (Task task : list) {
-
-                Log.d(
-                        "ADAPTER_DEBUG",
-                        "Tarea -> "
-                                + task.getTitle()
-                                + " | "
-                                + task.getFirebaseId()
-                );
-            }
-        }
-
         super.submitList(list);
     }
 
@@ -82,9 +62,7 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                 public boolean areContentsTheSame(
                         @NonNull Task oldItem,
                         @NonNull Task newItem) {
-                    Log.d("DIFF_DEBUG",
-                            "oldTitle=" + oldItem.getTitle()
-                                    + " | newTitle=" + newItem.getTitle());
+
 
                     return java.util.Objects.equals(
                             oldItem.getTitle(),
@@ -146,11 +124,7 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
         }
 
         void bind(Task task, TasksViewModel tasksViewModel, OnTaskClickListener listener, SharedPreferences prefs) {
-            Log.d(
-                    "BIND_DEBUG",
-                    "hash=" + System.identityHashCode(task)
-                            + " title=" + task.getTitle()
-            );
+
             taskTitle.setText(task.getTitle());
 
             // Mostrar información extra

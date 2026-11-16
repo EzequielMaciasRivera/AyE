@@ -63,11 +63,6 @@ public class PendingTasksFragment extends Fragment {
                 getViewLifecycleOwner(),
                 tasks -> {
 
-                    Log.d(
-                            "ROOM_PENDING_DEBUG",
-                            "Pendientes recibidas = "
-                                    + tasks.size()
-                    );
 
                     adapter.submitList(
                             tasks == null
