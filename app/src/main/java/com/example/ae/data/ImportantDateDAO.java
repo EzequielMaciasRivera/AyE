@@ -45,10 +45,18 @@ public interface ImportantDateDAO {
     @Query(
             "UPDATE important_dates " +
                     "SET createdBy = :nuevoAutor " +
-                    "WHERE createdBy = :autorAnterior"
+                    "WHERE ownerId = :ownerId"
     )
     void updateAuthor(
-            String autorAnterior,
+            String ownerId,
             String nuevoAutor
+    );
+
+    @Query(
+            "SELECT * FROM important_dates " +
+                    "WHERE ownerId = :ownerId"
+    )
+    List<ImportantDate> getDatesByOwnerId(
+            String ownerId
     );
 }

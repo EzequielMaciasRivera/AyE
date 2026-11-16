@@ -19,16 +19,19 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.ae.model.ImportantDate;
 import com.example.ae.model.ImportantDatesViewModel;
+import com.example.ae.model.TasksViewModel;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+
 public class ImportantDatesFragment extends Fragment {
     private RecyclerView recyclerView;
     private ImportantDatesAdapter adapter;
     private ImportantDatesViewModel datesViewModel;
+    private TasksViewModel tasksViewModel;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -40,6 +43,9 @@ public class ImportantDatesFragment extends Fragment {
 
         // ✅ Inicializar ViewModel
         datesViewModel = new ViewModelProvider(requireActivity()).get(ImportantDatesViewModel.class);
+        tasksViewModel =
+                new ViewModelProvider(requireActivity())
+                        .get(TasksViewModel.class);
 
         // ✅ Adapter con listener
         adapter = new ImportantDatesAdapter(new ImportantDatesAdapter.OnDateClickListener() {
@@ -92,6 +98,7 @@ public class ImportantDatesFragment extends Fragment {
 
         });
 
+
         // ✅ Sincronizar con Firebase al iniciar
         datesViewModel.syncFromFirebase();
 
@@ -125,6 +132,7 @@ public class ImportantDatesFragment extends Fragment {
                     calendar.get(Calendar.MONTH),
                     calendar.get(Calendar.DAY_OF_MONTH));
             datePicker.show();
+
         });
 
         builder.setView(dialogView);
@@ -142,14 +150,51 @@ public class ImportantDatesFragment extends Fragment {
             }
 
             ImportantDate newDate = new ImportantDate();
+
             newDate.setTitle(title);
-            newDate.setDescription(descriptionInput.getText().toString().trim());
+            newDate.setDescription(
+                    descriptionInput.getText().toString().trim()
+            );
             newDate.setDate(selectedDate[0]);
 
-            SharedPreferences prefs = requireContext().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
-            String userName = prefs.getString("userName", "desconocido");
-            newDate.setCreatedBy(userName);
+            SharedPreferences prefs =
+                    requireContext().getSharedPreferences(
+                            "AppPrefs",
+                            Context.MODE_PRIVATE
+                    );
 
+            String userName =
+                    prefs.getString(
+                            "userName",
+                            "desconocido"
+                    );
+
+            String currentOwnerId =
+                    prefs.getString(
+                            "ownerId",
+                            ""
+                    );
+
+            newDate.setCreatedBy(
+                    userName
+            );
+
+            Log.d(
+                    "PREFS_OWNER",
+                    "ownerId prefs = " +
+                            prefs.getString(
+                                    "ownerId",
+                                    "NO_EXISTE"
+                            )
+            );
+
+            newDate.setOwnerId(
+                    currentOwnerId
+            );
+            Log.d(
+                    "DATE_BEFORE_INSERT",
+                    "ownerId = " + newDate.getOwnerId()
+            );
             datesViewModel.insert(newDate); // 🔹 guarda en Room + Firebase
 
             ((TasksActivity) requireActivity())
@@ -285,6 +330,7 @@ public class ImportantDatesFragment extends Fragment {
     }
 
     // 🔹 Diálogo para editar autor
+    // 🔹 Diálogo para editar autor
     private void showEditAuthorDialog(ImportantDate date) {
 
         AlertDialog.Builder builder =
@@ -310,19 +356,28 @@ public class ImportantDatesFragment extends Fragment {
 
                     if (!newAuthor.isEmpty()) {
 
-                        ImportantDate updatedDate =
-                                new ImportantDate(date);
-
-                        updatedDate.setCreatedBy(newAuthor);
-
-                        datesViewModel.update(updatedDate);
-
                         SharedPreferences prefs =
                                 requireContext()
                                         .getSharedPreferences(
                                                 "AppPrefs",
                                                 Context.MODE_PRIVATE
                                         );
+
+                        String currentOwnerId =
+                                prefs.getString(
+                                        "ownerId",
+                                        ""
+                                );
+
+                        datesViewModel.updateAuthorForAllDates(
+                                currentOwnerId,
+                                newAuthor
+                        );
+
+                        tasksViewModel.updateAuthorForAllTasks(
+                                currentOwnerId,
+                                newAuthor
+                        );
 
                         prefs.edit()
                                 .putString(

@@ -35,6 +35,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.UUID;
+
 import android.widget.Button;
 
 public class TasksActivity extends AppCompatActivity {
@@ -49,6 +51,7 @@ public class TasksActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tasks);
+
 
         // Referencias UI
         TabLayout tabLayout = findViewById(R.id.tabLayout);
@@ -252,6 +255,25 @@ public class TasksActivity extends AppCompatActivity {
 
                         ImportantDatesViewModel datesViewModel =
                                 new ViewModelProvider(this).get(ImportantDatesViewModel.class);
+                        String ownerId =
+                                prefs.getString(
+                                        "ownerId",
+                                        null
+                                );
+
+                        if (ownerId == null) {
+
+                            ownerId = UUID.randomUUID().toString();
+
+                            prefs.edit()
+                                    .putString(
+                                            "ownerId",
+                                            ownerId
+                                    )
+                                    .apply();
+                        }
+
+                        newDate.setOwnerId(ownerId);
                         datesViewModel.insert(newDate);
 
                         showCustomToast("Fecha agregada por " + userName, R.drawable.enamorado);

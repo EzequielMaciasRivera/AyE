@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.ae.model.ImportantDatesViewModel;
 import com.example.ae.model.Task;
 import com.example.ae.model.TasksViewModel;
 
@@ -30,18 +31,22 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapter.TaskViewHolder> {
-
+    private final TasksViewModel tasksViewModel;
+    private final ImportantDatesViewModel importantDatesViewModel;
+    private final OnTaskClickListener listener;
     public interface OnTaskClickListener {
         void onEdit(Task task);
         void onDelete(Task task);
     }
 
-    private final TasksViewModel tasksViewModel;
-    private final OnTaskClickListener listener;
-
-    public CompletedTasksAdapter(TasksViewModel tasksViewModel, OnTaskClickListener listener) {
+    public CompletedTasksAdapter(
+            TasksViewModel tasksViewModel,
+            ImportantDatesViewModel importantDatesViewModel,
+            OnTaskClickListener listener
+    ) {
         super(DIFF_CALLBACK);
         this.tasksViewModel = tasksViewModel;
+        this.importantDatesViewModel = importantDatesViewModel;
         this.listener = listener;
     }
 
@@ -83,7 +88,14 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
         Log.d("ADAPTER_TEST", "onBindViewHolder posición=" + position);
         SharedPreferences prefs = holder.itemView.getContext()
                 .getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
-        holder.bind(task, tasksViewModel, listener, prefs);
+        holder.bind(
+                task,
+                tasksViewModel,
+                importantDatesViewModel,
+                listener,
+                prefs
+        );
+
     }
 
     static class TaskViewHolder extends RecyclerView.ViewHolder {
@@ -104,7 +116,7 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
             editDateButton = itemView.findViewById(R.id.editDateButton);
         }
 
-        void bind(Task task, TasksViewModel tasksViewModel, OnTaskClickListener listener, SharedPreferences prefs) {
+        void bind(Task task, TasksViewModel tasksViewModel, ImportantDatesViewModel importantDatesViewModel, OnTaskClickListener listener, SharedPreferences prefs) {
             Log.d(
                     "COMPLETED_BIND",
                     "Título = " + task.getTitle()
@@ -123,12 +135,7 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
             }
             taskInfo.setText(infoExtra);
 
-            String currentUser = prefs.getString("userName", "").trim();showCustomToast(
-                    itemView.getContext(),
-                    "Autor=" + task.getCreatedBy()
-                            + " | User=" + currentUser,
-                    R.drawable.sorpresa
-            );
+
            // boolean esAutor = task.getCreatedBy() != null &&
            //       task.getCreatedBy().trim().equalsIgnoreCase(currentUser);
             String currentOwnerId =
@@ -137,47 +144,19 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
                             ""
                     );
 
-            Log.d(
-                    "OWNER_TEST",
-                    "taskOwnerId=" + task.getOwnerId()
-                            + " currentOwnerId=" + currentOwnerId
-            );
-            showCustomToast(
-                    itemView.getContext(),
-                    "Owner tarea=" + task.getOwnerId()
-                            + "\nOwner actual=" + currentOwnerId,
-                    R.drawable.sorpresa
-            );
+
 
             boolean esAutor =
-                    task.getOwnerId() != null
-                            && task.getOwnerId()
-                            .equals(currentOwnerId);
-            Log.d(
-                    "OWNER_TEST",
-                    "esAutor=" + esAutor
-            );
+                    Objects.equals(
+                            task.getOwnerId(),
+                            currentOwnerId
+                    );
 
-            editButton.setVisibility(
-                    esAutor ? View.VISIBLE : View.GONE
-            );
 
-            deleteButton.setVisibility(
-                    esAutor ? View.VISIBLE : View.GONE
-            );
-
-            editAuthorButton.setVisibility(
-                    esAutor ? View.VISIBLE : View.GONE
-            );
-
-            editDateButton.setVisibility(
-                    esAutor ? View.VISIBLE : View.GONE
-            );
-
-           //editButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
-          // deleteButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
-          // editAuthorButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
-         //  editDateButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+            editButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+          deleteButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+          editAuthorButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+         editDateButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
 
 
             // Botón eliminar
@@ -217,48 +196,29 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
                         .setView(input)
                         .setPositiveButton("Guardar", (dialog, which) -> {
 
-                            String nuevoAutor =
+                            String nuevoTitulo =
                                     input.getText().toString().trim();
 
-                            if (!nuevoAutor.isEmpty()) {
-
-                                tasksViewModel.updateAuthorForAllTasks(
-                                        currentOwnerId,
-                                        nuevoAutor
-                                );
+                            if (!nuevoTitulo.isEmpty()) {
 
                                 Task taskActualizada =
                                         new Task(task);
 
-                                taskActualizada.setCreatedBy(
-                                        nuevoAutor
+                                taskActualizada.setTitle(
+                                        nuevoTitulo
                                 );
 
                                 tasksViewModel.update(
                                         taskActualizada
                                 );
 
-                                prefs.edit()
-                                        .putString(
-                                                "userName",
-                                                nuevoAutor
-                                        )
-                                        .apply();
-
                                 showCustomToast(
                                         v.getContext(),
-                                        "Autor actualizado correctamente",
+                                        "Tarea actualizada correctamente",
                                         R.drawable.enamorado
                                 );
-
-                            } else {
-
-                                showCustomToast(
-                                        v.getContext(),
-                                        "El nombre no puede estar vacío",
-                                        R.drawable.no
-                                );
                             }
+
                         })
                         .setNegativeButton("Cancelar", null)
                         .show();
@@ -291,6 +251,10 @@ public class CompletedTasksAdapter extends ListAdapter<Task, CompletedTasksAdapt
                                         nuevoAutor
                                 );
 
+                                importantDatesViewModel.updateAuthorForAllDates(
+                                        currentOwnerId,
+                                        nuevoAutor
+                                );
 
                                 prefs.edit()
                                         .putString(

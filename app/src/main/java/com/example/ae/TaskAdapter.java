@@ -171,11 +171,24 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
 
             boolean esAutor =
                     task.getOwnerId() != null
-                            && task.getOwnerId().equals(currentOwnerId);
+                            && currentOwnerId != null
+                            && task.getOwnerId().trim()
+                            .equals(currentOwnerId.trim());
+            taskCheckBox.setVisibility(
+                    esAutor ? View.VISIBLE : View.GONE
+            );
 
-            editButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
-            deleteButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
-            editAuthorButton.setVisibility(esAutor ? View.VISIBLE : View.GONE);
+            editButton.setVisibility(
+                    esAutor ? View.VISIBLE : View.GONE
+            );
+
+            deleteButton.setVisibility(
+                    esAutor ? View.VISIBLE : View.GONE
+            );
+
+            editAuthorButton.setVisibility(
+                    esAutor ? View.VISIBLE : View.GONE
+            );
 
             // Checkbox
             taskCheckBox.setOnCheckedChangeListener(null);

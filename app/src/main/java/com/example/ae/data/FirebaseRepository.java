@@ -181,7 +181,10 @@ public class FirebaseRepository {
     // ==============================
 
     public void saveImportantDate(ImportantDate date) {
-
+        Log.d(
+                "DATE_FIREBASE",
+                "ownerId = " + date.getOwnerId()
+        );
         if (date.getFirebaseId() == null ||
                 date.getFirebaseId().isEmpty()) {
 

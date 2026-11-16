@@ -1,6 +1,7 @@
 package com.example.ae.model;
 
 import android.app.Application;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -30,6 +31,10 @@ public class ImportantDatesViewModel extends AndroidViewModel {
 
     // Insertar
     public void insert(ImportantDate date) {
+        Log.d(
+                "DATE_VIEWMODEL",
+                "ownerId = " + date.getOwnerId()
+        );
         AppDatabase.databaseWriteExecutor.execute(() -> {
             dateDao.insertOrReplace(date);
             if (date.getFirebaseId() == null || date.getFirebaseId().isEmpty()) {
@@ -64,5 +69,34 @@ public class ImportantDatesViewModel extends AndroidViewModel {
 
         firebaseRepo.fetchImportantDates();
 
+    }
+    public void updateAuthorForAllDates(
+            String ownerId,
+            String nuevoAutor
+    ) {
+
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+
+            dateDao.updateAuthor(
+                    ownerId,
+                    nuevoAutor
+            );
+
+            List<ImportantDate> dates =
+                    dateDao.getDatesByOwnerId(
+                            ownerId
+                    );
+
+            for (ImportantDate date : dates) {
+
+                date.setCreatedBy(
+                        nuevoAutor
+                );
+
+                firebaseRepo.saveImportantDate(
+                        date
+                );
+            }
+        });
     }
 }

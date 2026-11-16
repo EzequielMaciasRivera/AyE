@@ -19,6 +19,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Log;
 
 public class ImportantDatesAdapter extends RecyclerView.Adapter<ImportantDatesAdapter.DateViewHolder> {
     private List<ImportantDate> dateList = new ArrayList<>();
@@ -54,34 +57,99 @@ public class ImportantDatesAdapter extends RecyclerView.Adapter<ImportantDatesAd
 
     @Override
     public void onBindViewHolder(@NonNull DateViewHolder holder, int position) {
+
         ImportantDate date = dateList.get(position);
 
         holder.title.setText(date.getTitle());
         holder.description.setText(date.getDescription());
 
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        holder.dateValue.setText("Fecha: " + sdf.format(new Date(date.getDate())));
-        holder.author.setText("Autor: " + date.getCreatedBy());
+        SimpleDateFormat sdf =
+                new SimpleDateFormat(
+                        "dd/MM/yyyy",
+                        Locale.getDefault()
+                );
+
+        holder.dateValue.setText(
+                "Fecha: " +
+                        sdf.format(
+                                new Date(date.getDate())
+                        )
+        );
+
+        holder.author.setText(
+                "Autor: " +
+                        date.getCreatedBy()
+        );
+
+        SharedPreferences prefs =
+                holder.itemView.getContext()
+                        .getSharedPreferences(
+                                "AppPrefs",
+                                Context.MODE_PRIVATE
+                        );
+
+        String currentOwnerId =
+                prefs.getString(
+                        "ownerId",
+                        ""
+                );
 
 
-        // Botón editar fecha/título/descripcion → sin confirmación previa
-        holder.editButton.setOnClickListener(v -> listener.onEdit(date));
+        boolean esAutor =
+                date.getOwnerId() != null
+                        && date.getOwnerId().equals(currentOwnerId);
 
-        // Botón editar autor → sin confirmación previa
-        holder.editAuthorButton.setOnClickListener(v -> listener.onEditAuthor(date));
 
-        // Botón eliminar con confirmación
+        holder.editButton.setVisibility(
+                esAutor
+                        ? View.VISIBLE
+                        : View.GONE
+        );
+
+        holder.editAuthorButton.setVisibility(
+                esAutor
+                        ? View.VISIBLE
+                        : View.GONE
+        );
+
+        holder.deleteButton.setVisibility(
+                esAutor
+                        ? View.VISIBLE
+                        : View.GONE
+        );
+
+        holder.editButton.setOnClickListener(
+                v -> listener.onEdit(date)
+        );
+
+        holder.editAuthorButton.setOnClickListener(
+                v -> listener.onEditAuthor(date)
+        );
+
         holder.deleteButton.setOnClickListener(v -> {
+
             new AlertDialog.Builder(v.getContext())
                     .setTitle("Eliminar fecha")
-                    .setMessage("¿Seguro que deseas eliminar esta fecha importante?")
-                    .setPositiveButton("Sí", (dialog, which) -> {
-                        listener.onDelete(date);
-                        showCustomToast(v.getContext(),
-                                "Fecha eliminada correctamente",
-                                R.drawable.sorpresa);
-                    })
-                    .setNegativeButton("Cancelar", null)
+                    .setMessage(
+                            "¿Seguro que deseas eliminar esta fecha importante?"
+                    )
+                    .setPositiveButton(
+                            "Sí",
+                            (dialog, which) -> {
+
+                                listener.onDelete(date);
+
+                                showCustomToast(
+                                        v.getContext(),
+                                        "Fecha eliminada correctamente",
+                                        R.drawable.sorpresa
+                                );
+                            }
+                    )
+                    .setNegativeButton(
+                            "Cancelar",
+                            null
+                    )
                     .show();
         });
     }

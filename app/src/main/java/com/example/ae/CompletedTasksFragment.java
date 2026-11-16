@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.ae.model.ImportantDatesViewModel;
 import com.example.ae.model.Task;
 import com.example.ae.model.TasksViewModel;
 
@@ -23,6 +24,7 @@ public class CompletedTasksFragment extends Fragment {
     private RecyclerView recyclerView;
     private CompletedTasksAdapter adapter;
     private TasksViewModel tasksViewModel;
+    private ImportantDatesViewModel importantDatesViewModel;
 
     @Nullable
     @Override
@@ -37,21 +39,35 @@ public class CompletedTasksFragment extends Fragment {
 
         // ✅ Inicializar el ViewModel compartido con la Activity
         tasksViewModel = new ViewModelProvider(requireActivity()).get(TasksViewModel.class);
+        importantDatesViewModel =
+                new ViewModelProvider(
+                        requireActivity()
+                ).get(
+                        ImportantDatesViewModel.class
+                );
 
         // ✅ Inicializar el adapter con el ViewModel y listener
-        adapter = new CompletedTasksAdapter(tasksViewModel, new CompletedTasksAdapter.OnTaskClickListener() {
-            @Override
-            public void onEdit(Task task) {
-                tasksViewModel.update(task);
-            }
+        adapter = new CompletedTasksAdapter(
+                tasksViewModel,
+                importantDatesViewModel,
+                new CompletedTasksAdapter.OnTaskClickListener() {
+                    @Override
+                    public void onEdit(Task task) {
+                        tasksViewModel.update(task);
+                    }
 
-            @Override
-            public void onDelete(Task task) {
-                tasksViewModel.delete(task);
-                ((TasksActivity) requireActivity())
-                        .showCustomToast("Tarea eliminada correctamente", R.drawable.sorpresa);
-            }
-        });
+                    @Override
+                    public void onDelete(Task task) {
+                        tasksViewModel.delete(task);
+
+                        ((TasksActivity) requireActivity())
+                                .showCustomToast(
+                                        "Tarea eliminada correctamente",
+                                        R.drawable.sorpresa
+                                );
+                    }
+                }
+        );
 
         recyclerView.setAdapter(adapter);
 
