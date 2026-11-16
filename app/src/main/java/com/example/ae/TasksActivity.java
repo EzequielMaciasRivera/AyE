@@ -24,6 +24,7 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -57,6 +58,40 @@ public class TasksActivity extends AppCompatActivity {
         TabLayout tabLayout = findViewById(R.id.tabLayout);
         ViewPager2 viewPager = findViewById(R.id.viewPager);
         fabAddTask = findViewById(R.id.addTaskButton);
+
+
+        fabAddTask.setOnTouchListener(new View.OnTouchListener() {
+
+            private float dX;
+            private float dY;
+
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+
+                switch (event.getAction()) {
+
+                    case MotionEvent.ACTION_DOWN:
+
+                        dX = view.getX() - event.getRawX();
+                        dY = view.getY() - event.getRawY();
+
+                        return true;
+
+                    case MotionEvent.ACTION_MOVE:
+
+                        view.animate()
+                                .x(event.getRawX() + dX)
+                                .y(event.getRawY() + dY)
+                                .setDuration(0)
+                                .start();
+
+                        return true;
+
+                    default:
+                        return false;
+                }
+            }
+        });
 
         // Inicializar Room
         // ✅ Inicializa el ViewModel primero
@@ -297,4 +332,5 @@ public class TasksActivity extends AppCompatActivity {
         toast.setView(layout);
         toast.show();
     }
+
 }

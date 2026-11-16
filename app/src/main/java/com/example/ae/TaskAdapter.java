@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.ae.model.ImportantDatesViewModel;
 import com.example.ae.model.Task;
 import com.example.ae.model.TasksViewModel;
 
@@ -40,12 +41,22 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
         void onDelete(Task task);
     }
 
-    private final TasksViewModel tasksViewModel;
+
     private final OnTaskClickListener listener;
 
-    public TaskAdapter(TasksViewModel tasksViewModel, OnTaskClickListener listener) {
+    private final TasksViewModel tasksViewModel;
+    private final ImportantDatesViewModel importantDatesViewModel;
+
+    public TaskAdapter(
+            TasksViewModel tasksViewModel,
+            ImportantDatesViewModel importantDatesViewModel,
+            OnTaskClickListener listener
+    ) {
+
         super(DIFF_CALLBACK);
+
         this.tasksViewModel = tasksViewModel;
+        this.importantDatesViewModel = importantDatesViewModel;
         this.listener = listener;
     }
 
@@ -102,7 +113,13 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
         Task task = getItem(position);
         SharedPreferences prefs = holder.itemView.getContext()
                 .getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE);
-        holder.bind(task, tasksViewModel, listener, prefs);
+        holder.bind(
+                task,
+                tasksViewModel,
+                importantDatesViewModel,
+                listener,
+                prefs
+        );
     }
 
     static class TaskViewHolder extends RecyclerView.ViewHolder {
@@ -123,7 +140,13 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
             editAuthorButton = itemView.findViewById(R.id.editAuthorButton);
         }
 
-        void bind(Task task, TasksViewModel tasksViewModel, OnTaskClickListener listener, SharedPreferences prefs) {
+        void bind(
+                Task task,
+                TasksViewModel tasksViewModel,
+                ImportantDatesViewModel importantDatesViewModel,
+                OnTaskClickListener listener,
+                SharedPreferences prefs
+        ) {
 
             taskTitle.setText(task.getTitle());
 
@@ -212,17 +235,36 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                         .setTitle("Editar tarea")
                         .setView(input)
                         .setPositiveButton("Guardar", (dialog, which) -> {
-                            String nuevoTitulo = input.getText().toString();
-                            if (!nuevoTitulo.trim().isEmpty()) {
 
-                                showCustomToast(v.getContext(),
+                            String nuevoTitulo =
+                                    input.getText().toString().trim();
+
+                            if (!nuevoTitulo.isEmpty()) {
+
+                                Task tareaActualizada =
+                                        new Task(task);
+
+                                tareaActualizada.setTitle(
+                                        nuevoTitulo
+                                );
+
+                                tasksViewModel.update(
+                                        tareaActualizada
+                                );
+
+                                showCustomToast(
+                                        v.getContext(),
                                         "Tarea actualizada correctamente",
-                                        R.drawable.enamorado);
+                                        R.drawable.enamorado
+                                );
 
                             } else {
-                                showCustomToast(v.getContext(),
+
+                                showCustomToast(
+                                        v.getContext(),
                                         "El título no puede estar vacío",
-                                        R.drawable.no);
+                                        R.drawable.no
+                                );
                             }
                         })
                         .setNegativeButton("Cancelar", null)
@@ -246,6 +288,11 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                             if (!nuevoAutor.isEmpty()) {
 
                                 tasksViewModel.updateAuthorForAllTasks(
+                                        currentOwnerId,
+                                        nuevoAutor
+                                );
+
+                                importantDatesViewModel.updateAuthorForAllDates(
                                         currentOwnerId,
                                         nuevoAutor
                                 );

@@ -1,7 +1,6 @@
 package com.example.ae;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,9 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.ae.data.AppDatabase;
-import com.example.ae.data.TaskDao;
+import com.example.ae.model.ImportantDatesViewModel;
 import com.example.ae.model.Task;
 import com.example.ae.model.TasksViewModel;
 
@@ -23,7 +20,7 @@ public class PendingTasksFragment extends Fragment {
     private RecyclerView recyclerView;
     private TaskAdapter adapter;
     private TasksViewModel tasksViewModel;
-
+    private ImportantDatesViewModel importantDatesViewModel;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -39,9 +36,14 @@ public class PendingTasksFragment extends Fragment {
         // ✅ Inicializar el adapter con TaskDao y listener
         // ✅ Inicializa el ViewModel primero
         tasksViewModel = new ViewModelProvider(requireActivity()).get(TasksViewModel.class);
-
+        importantDatesViewModel =
+                new ViewModelProvider(requireActivity())
+                        .get(ImportantDatesViewModel.class);
 // ✅ Pasa el ViewModel al adapter
-        adapter = new TaskAdapter(tasksViewModel, new TaskAdapter.OnTaskClickListener() {
+        adapter = new TaskAdapter(
+                tasksViewModel,
+                importantDatesViewModel,
+                new TaskAdapter.OnTaskClickListener() {
             @Override
             public void onEdit(Task task) {
                 tasksViewModel.update(task);
