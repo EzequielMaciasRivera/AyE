@@ -46,6 +46,9 @@ public class TasksActivity extends AppCompatActivity {
     private FloatingActionButton fabAddTask;
     private AppDatabase db;
     private TasksViewModel tasksViewModel;
+    private boolean modoMover = false;
+    private float dX;
+    private float dY;
 
 
     @Override
@@ -57,42 +60,118 @@ public class TasksActivity extends AppCompatActivity {
         // Referencias UI
         TabLayout tabLayout = findViewById(R.id.tabLayout);
         ViewPager2 viewPager = findViewById(R.id.viewPager);
+
         fabAddTask = findViewById(R.id.addTaskButton);
+        SharedPreferences prefs =
+                getSharedPreferences(
+                        "AppPrefs",
+                        MODE_PRIVATE
+                );
 
+        float x = prefs.getFloat(
+                "fabX",
+                -1
+        );
 
-        fabAddTask.setOnTouchListener(new View.OnTouchListener() {
+        float y = prefs.getFloat(
+                "fabY",
+                -1
+        );
 
-            private float dX;
-            private float dY;
+        if (x != -1 && y != -1) {
 
-            @Override
-            public boolean onTouch(View view, MotionEvent event) {
+            fabAddTask.post(() -> {
+                fabAddTask.setX(x);
+                fabAddTask.setY(y);
+            });
+        }
+        fabAddTask.setOnLongClickListener(v -> {
 
-                switch (event.getAction()) {
+            modoMover = !modoMover;
 
-                    case MotionEvent.ACTION_DOWN:
+            fabAddTask.setAlpha(
+                    modoMover ? 0.7f : 1f
+            );
 
-                        dX = view.getX() - event.getRawX();
-                        dY = view.getY() - event.getRawY();
+            Toast.makeText(
+                    this,
+                    modoMover
+                            ? "Modo mover activado"
+                            : "Modo mover desactivado",
+                    Toast.LENGTH_SHORT
+            ).show();
 
-                        return true;
+            return true;
+        });
+        fabAddTask.setOnTouchListener((view, event) -> {
 
-                    case MotionEvent.ACTION_MOVE:
+            if (!modoMover) {
+                return false; // deja funcionar el click normal
+            }
 
-                        view.animate()
-                                .x(event.getRawX() + dX)
-                                .y(event.getRawY() + dY)
-                                .setDuration(0)
-                                .start();
+            switch (event.getAction()) {
 
-                        return true;
+                case MotionEvent.ACTION_DOWN:
 
-                    default:
-                        return false;
-                }
+                    dX = view.getX() - event.getRawX();
+                    dY = view.getY() - event.getRawY();
+
+                    return true;
+
+                case MotionEvent.ACTION_MOVE:
+
+                    float nuevaX = event.getRawX() + dX;
+                    float nuevaY = event.getRawY() + dY;
+
+                    nuevaX = Math.max(
+                            0,
+                            Math.min(
+                                    nuevaX,
+                                    ((View)view.getParent()).getWidth()
+                                            - view.getWidth()
+                            )
+                    );
+
+                    nuevaY = Math.max(
+                            0,
+                            Math.min(
+                                    nuevaY,
+                                    ((View)view.getParent()).getHeight()
+                                            - view.getHeight()
+                            )
+                    );
+
+                    view.setX(nuevaX);
+                    view.setY(nuevaY);
+
+                    return true;
+
+                case MotionEvent.ACTION_UP:
+
+                    getSharedPreferences(
+                            "AppPrefs",
+                            MODE_PRIVATE
+                    )
+                            .edit()
+                            .putFloat("fabX", view.getX())
+                            .putFloat("fabY", view.getY())
+                            .apply();
+
+                    modoMover = false;
+
+                    fabAddTask.setAlpha(1f);
+
+                    Toast.makeText(
+                            TasksActivity.this,
+                            "Posición guardada",
+                            Toast.LENGTH_SHORT
+                    ).show();
+
+                    return true;
+                default:
+                    return false;
             }
         });
-
         // Inicializar Room
         // ✅ Inicializa el ViewModel primero
         tasksViewModel = new ViewModelProvider(this).get(TasksViewModel.class);
