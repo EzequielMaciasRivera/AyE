@@ -12,6 +12,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import com.example.ae.data.AppDatabase;
+import com.example.ae.data.NotificationHelper;
 import com.example.ae.data.TaskDao;
 import com.example.ae.model.ImportantDate;
 import com.example.ae.model.Task;
@@ -21,6 +22,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,10 +37,13 @@ import android.app.DatePickerDialog;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.UUID;
 
 import android.widget.Button;
+import com.google.firebase.firestore.FirebaseFirestore;
+import java.util.Collections;
 
 public class TasksActivity extends AppCompatActivity {
 
@@ -56,10 +61,14 @@ public class TasksActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tasks);
 
+        NotificationHelper.createNotificationChannel(this);
+
 
         // Referencias UI
         TabLayout tabLayout = findViewById(R.id.tabLayout);
         ViewPager2 viewPager = findViewById(R.id.viewPager);
+
+
 
         fabAddTask = findViewById(R.id.addTaskButton);
         SharedPreferences prefs =
@@ -177,6 +186,58 @@ public class TasksActivity extends AppCompatActivity {
         tasksViewModel = new ViewModelProvider(this).get(TasksViewModel.class);
 
         tasksViewModel.syncFromFirebase();
+        String ownerId =
+                prefs.getString(
+                        "ownerId",
+                        null
+                );
+
+        if (ownerId == null) {
+
+            ownerId = UUID.randomUUID().toString();
+
+            prefs.edit()
+                    .putString(
+                            "ownerId",
+                            ownerId
+                    )
+                    .apply();
+        }
+
+        final String finalOwnerId = ownerId;
+
+        FirebaseMessaging.getInstance()
+                .getToken()
+                .addOnSuccessListener(token -> {
+
+                    Log.d(
+                            "FCM_TOKEN",
+                            token
+                    );
+
+                    Log.d(
+                            "OWNER_ID",
+                            finalOwnerId
+                    );
+
+                    HashMap<String, Object> tokenData =
+                            new HashMap<>();
+
+                    tokenData.put(
+                            "token",
+                            token
+                    );
+
+                    tokenData.put(
+                            "ownerId",
+                            finalOwnerId
+                    );
+
+                    FirebaseFirestore.getInstance()
+                            .collection("deviceTokens")
+                            .document(token)
+                            .set(tokenData);
+                });
 
 // ✅ Pasa el ViewModel al adapter
 

@@ -194,6 +194,9 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                 task.setCompleted(isChecked);
                 task.setCompletedAt(isChecked ? System.currentTimeMillis() : null);
                 tasksViewModel.update(task); // ✅ usa ViewModel
+               // firebaseRepo.sendTaskCompletedNotification(
+              //          task
+               // );
                 showCustomToast(buttonView.getContext(),
                         isChecked ? "Tarea marcada como completada" : "Tarea marcada como pendiente",
                         isChecked ? R.drawable.enamorado : R.drawable.sorpresa);

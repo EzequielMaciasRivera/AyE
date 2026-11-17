@@ -62,6 +62,9 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.viewpager2:viewpager2:1.0.0")
 
+    // FCM
+    implementation("com.google.firebase:firebase-messaging:24.0.1")
+
     // Firebase Auth
     implementation("com.google.firebase:firebase-auth:22.3.0")
 

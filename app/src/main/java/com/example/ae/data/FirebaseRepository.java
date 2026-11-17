@@ -10,6 +10,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -25,7 +26,49 @@ public class FirebaseRepository {
     // ==============================
     // TAREAS
     // ==============================
+    private void createNotification(
+            String ownerId,
+            String title,
+            String message
+    ) {
 
+        HashMap<String, Object> data =
+                new HashMap<>();
+
+        data.put(
+                "ownerId",
+                ownerId
+        );
+
+        data.put(
+                "title",
+                title
+        );
+
+        data.put(
+                "message",
+                message
+        );
+
+        data.put(
+                "createdAt",
+                System.currentTimeMillis()
+        );
+
+        db.collection("notifications")
+                .add(data)
+                .addOnSuccessListener(documentReference ->
+                        Log.d(
+                                "NOTIFICATION",
+                                "Notificación creada"
+                        ))
+                .addOnFailureListener(e ->
+                        Log.e(
+                                "NOTIFICATION",
+                                "Error creando notificación",
+                                e
+                        ));
+    }
     public void saveTask(Task task) {
 
         if (task.getFirebaseId() == null || task.getFirebaseId().isEmpty()) {
@@ -56,14 +99,20 @@ public class FirebaseRepository {
                                     + task.getFirebaseId()
                     );
 
+                    createNotification(
+                            task.getOwnerId(),
+                            "❤️ Nueva tarea",
+                            task.getCreatedBy()
+                                    + " agregó una nueva tarea:\n"
+                                    + task.getTitle()
+                    );
+
                     AppDatabase.databaseWriteExecutor.execute(() -> {
 
                         Log.d(
                                 "ROOM_SAVE_DEBUG",
                                 "Guardando en Room -> "
                                         + task.getTitle()
-                                        + " / "
-                                        + task.getFirebaseId()
                         );
 
                         AppDatabase.getInstance(context)
@@ -81,6 +130,7 @@ public class FirebaseRepository {
                         )
                 );
     }
+
 
     public void update(Task task) {
 
@@ -225,6 +275,7 @@ public class FirebaseRepository {
                             Log.e("FirebaseRepo",
                                     "❌ Error al actualizar fecha",
                                     e));
+
         }
     }
 
