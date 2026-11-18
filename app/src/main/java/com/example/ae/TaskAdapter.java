@@ -26,6 +26,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
+import android.app.DatePickerDialog;
+import java.util.Calendar;
+import android.widget.Button;
+import android.util.TypedValue;
+
 
 public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
 
@@ -123,6 +128,7 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
     }
 
     static class TaskViewHolder extends RecyclerView.ViewHolder {
+        androidx.cardview.widget.CardView cardView;
         TextView taskTitle;
         TextView taskInfo;
         CheckBox taskCheckBox;
@@ -132,6 +138,9 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
 
         TaskViewHolder(View itemView) {
             super(itemView);
+            cardView =
+                    (androidx.cardview.widget.CardView)
+                            itemView;
             taskTitle = itemView.findViewById(R.id.taskTitle);
             taskInfo = itemView.findViewById(R.id.taskInfo);
             taskCheckBox = itemView.findViewById(R.id.taskCheckBox);
@@ -148,17 +157,112 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                 SharedPreferences prefs
         ) {
 
+
+            taskTitle.setText(task.getTitle());
             taskTitle.setText(task.getTitle());
 
+            taskTitle.setTextColor(
+                    android.graphics.Color.BLACK
+            );
             // Mostrar información extra
             String infoExtra = "Creada el: " + formatDate(task.getCreatedAt());
+            int backgroundColor =
+                    android.graphics.Color.parseColor(
+                            "#FAFAFA"
+                    );
+
             if (task.getDueDate() != null) {
-                infoExtra += "\nCumplir antes de: " + formatDate(task.getDueDate());
+
+                infoExtra +=
+                        "\n📅 Cumplir antes de: "
+                                + formatDate(
+                                task.getDueDate()
+                        );
+
+                long diferenciaMillis =
+                        task.getDueDate()
+                                - System.currentTimeMillis();
+
+                long horas =
+                        diferenciaMillis
+                                / (1000 * 60 * 60);
+
+                long dias =
+                        diferenciaMillis
+                                / (1000 * 60 * 60 * 24);
+
+                if (diferenciaMillis < 0) {
+
+                    long diasVencida =
+                            Math.abs(horas / 24);
+
+                    if (diasVencida == 0) {
+
+                        infoExtra +=
+                                "\n❗Venció hace "
+                                        + Math.abs(horas)
+                                        + " horas";
+
+                    } else {
+
+                        infoExtra +=
+                                "\n❗Vencida hace "
+                                        + diasVencida
+                                        + " días";
+                    }
+
+                    backgroundColor =
+                            android.graphics.Color.parseColor(
+                                    "#F8D7DA"
+                            );
+
+                } else if (horas < 24) {
+
+                    infoExtra +=
+                            "\n🚨 Vence en "
+                                    + horas
+                                    + " horas";
+
+                    backgroundColor =
+                            android.graphics.Color.parseColor(
+                                    "#F8D7DA"
+                            );
+
+                } else if (dias <= 3) {
+
+                    infoExtra +=
+                            "\n🟡 Faltan "
+                                    + dias
+                                    + " días";
+
+                    backgroundColor =
+                            android.graphics.Color.parseColor(
+                                    "#FFF3CD"
+                            );
+
+                } else {
+
+                    infoExtra +=
+                            "\n🟢 Faltan "
+                                    + dias
+                                    + " días";
+
+                    backgroundColor =
+                            android.graphics.Color.parseColor(
+                                    "#D4EDDA"
+                            );
+                }
             }
+
             if (task.getCreatedBy() != null) {
                 infoExtra += "\nAutor: " + task.getCreatedBy();
             }
+
             taskInfo.setText(infoExtra);
+
+            cardView.setCardBackgroundColor(
+                    backgroundColor
+            );
 
             String currentOwnerId =
                     prefs.getString(
@@ -226,51 +330,133 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
 
             // Botón editar título
             editButton.setOnClickListener(v -> {
+
                 if (!esAutor) {
-                    showCustomToast(v.getContext(),
+
+                    showCustomToast(
+                            v.getContext(),
                             "Solo el autor puede editar esta tarea",
-                            R.drawable.no);
+                            R.drawable.no
+                    );
+
                     return;
                 }
-                EditText input = new EditText(v.getContext());
-                input.setText(task.getTitle());
+
+                View dialogView =
+                        LayoutInflater.from(v.getContext())
+                                .inflate(
+                                        R.layout.dialog_edit_task,
+                                        null
+                                );
+
+                EditText input =
+                        dialogView.findViewById(
+                                R.id.editTaskTitle
+                        );
+
+                Button btnDueDate =
+                        dialogView.findViewById(
+                                R.id.btnEditDueDate
+                        );
+
+                input.setText(
+                        task.getTitle()
+                );
+
+                final Long[] selectedDueDate =
+                        { task.getDueDate() };
+
+                if (task.getDueDate() != null) {
+
+                    btnDueDate.setText(
+                            "📅 "
+                                    + formatDate(
+                                    task.getDueDate()
+                            )
+                    );
+                }
+
+                btnDueDate.setOnClickListener(btn -> {
+
+                    Calendar calendar =
+                            Calendar.getInstance();
+
+                    DatePickerDialog picker =
+                            new DatePickerDialog(
+                                    v.getContext(),
+                                    (view, year, month, day) -> {
+
+                                        Calendar due =
+                                                Calendar.getInstance();
+
+                                        due.set(
+                                                year,
+                                                month,
+                                                day,
+                                                23,
+                                                59
+                                        );
+
+                                        selectedDueDate[0] =
+                                                due.getTimeInMillis();
+
+                                        btnDueDate.setText(
+                                                "📅 "
+                                                        + day
+                                                        + "/"
+                                                        + (month + 1)
+                                                        + "/"
+                                                        + year
+                                        );
+
+                                    },
+                                    calendar.get(Calendar.YEAR),
+                                    calendar.get(Calendar.MONTH),
+                                    calendar.get(Calendar.DAY_OF_MONTH)
+                            );
+
+                    picker.show();
+                });
+
                 new AlertDialog.Builder(v.getContext())
                         .setTitle("Editar tarea")
-                        .setView(input)
-                        .setPositiveButton("Guardar", (dialog, which) -> {
+                        .setView(dialogView)
+                        .setPositiveButton("Guardar",
+                                (dialog, which) -> {
 
-                            String nuevoTitulo =
-                                    input.getText().toString().trim();
+                                    String nuevoTitulo =
+                                            input.getText()
+                                                    .toString()
+                                                    .trim();
 
-                            if (!nuevoTitulo.isEmpty()) {
+                                    if (!nuevoTitulo.isEmpty()) {
 
-                                Task tareaActualizada =
-                                        new Task(task);
+                                        Task tareaActualizada =
+                                                new Task(task);
 
-                                tareaActualizada.setTitle(
-                                        nuevoTitulo
-                                );
+                                        tareaActualizada.setTitle(
+                                                nuevoTitulo
+                                        );
 
-                                tasksViewModel.update(
-                                        tareaActualizada
-                                );
+                                        tareaActualizada.setDueDate(
+                                                selectedDueDate[0]
+                                        );
 
-                                showCustomToast(
-                                        v.getContext(),
-                                        "Tarea actualizada correctamente",
-                                        R.drawable.enamorado
-                                );
+                                        tasksViewModel.update(
+                                                tareaActualizada
+                                        );
 
-                            } else {
-
-                                showCustomToast(
-                                        v.getContext(),
-                                        "El título no puede estar vacío",
-                                        R.drawable.no
-                                );
-                            }
-                        })
-                        .setNegativeButton("Cancelar", null)
+                                        showCustomToast(
+                                                v.getContext(),
+                                                "Tarea actualizada",
+                                                R.drawable.enamorado
+                                        );
+                                    }
+                                })
+                        .setNegativeButton(
+                                "Cancelar",
+                                null
+                        )
                         .show();
             });
 

@@ -333,64 +333,166 @@ public class TasksActivity extends AppCompatActivity {
     }
 
     private void showAddTaskDialog() {
-        EditText input = new EditText(this);
-        input.setHint("Escribe el título de la tarea");
 
-        new AlertDialog.Builder(this)
-                .setTitle("Nueva tarea")
-                .setView(input)
-                .setPositiveButton("Agregar", (dialog, which) -> {
-                    String taskTitle = input.getText().toString().trim();
-
-                    if (!taskTitle.isEmpty()) {
-                        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-                        String userName = prefs.getString("userName", "desconocido");
-
-                        Task newTask = new Task(taskTitle, userName);
-
-                        String ownerId = prefs.getString(
-                                "ownerId",
+        View dialogView =
+                LayoutInflater.from(this)
+                        .inflate(
+                                R.layout.dialog_add_task,
                                 null
                         );
 
+        EditText input =
+                dialogView.findViewById(
+                        R.id.editTaskTitle
+                );
+
+        Button dueDateButton =
+                dialogView.findViewById(
+                        R.id.btnPickDueDate
+                );
+
+        final Long[] selectedDueDate =
+                { null };
+
+        dueDateButton.setOnClickListener(v -> {
+
+            Calendar calendar =
+                    Calendar.getInstance();
+
+            DatePickerDialog picker =
+                    new DatePickerDialog(
+                            this,
+                            (view, year, month, day) -> {
+
+                                Calendar due =
+                                        Calendar.getInstance();
+
+                                due.set(
+                                        year,
+                                        month,
+                                        day,
+                                        23,
+                                        59
+                                );
+
+                                selectedDueDate[0] =
+                                        due.getTimeInMillis();
+
+                                dueDateButton.setText(
+                                        "📅 "
+                                                + day
+                                                + "/"
+                                                + (month + 1)
+                                                + "/"
+                                                + year
+                                );
+
+                            },
+                            calendar.get(Calendar.YEAR),
+                            calendar.get(Calendar.MONTH),
+                            calendar.get(Calendar.DAY_OF_MONTH)
+                    );
+
+            picker.show();
+        });
+
+        new AlertDialog.Builder(this)
+                .setTitle("Nueva tarea")
+                .setView(dialogView)
+                .setPositiveButton("Agregar", (dialog, which) -> {
+
+                    String taskTitle =
+                            input.getText()
+                                    .toString()
+                                    .trim();
+
+                    if (!taskTitle.isEmpty()) {
+
+                        SharedPreferences prefs =
+                                getSharedPreferences(
+                                        "AppPrefs",
+                                        MODE_PRIVATE
+                                );
+
+                        String userName =
+                                prefs.getString(
+                                        "userName",
+                                        "desconocido"
+                                );
+
+                        Task newTask =
+                                new Task(
+                                        taskTitle,
+                                        userName
+                                );
+
+                        String ownerId =
+                                prefs.getString(
+                                        "ownerId",
+                                        null
+                                );
+
                         if (ownerId == null) {
 
-                            ownerId = java.util.UUID
-                                    .randomUUID()
-                                    .toString();
+                            ownerId =
+                                    UUID.randomUUID()
+                                            .toString();
 
                             prefs.edit()
-                                    .putString("ownerId", ownerId)
+                                    .putString(
+                                            "ownerId",
+                                            ownerId
+                                    )
                                     .apply();
                         }
 
-                        newTask.setCreatedBy(userName);
-                        newTask.setOwnerId(ownerId);
+                        newTask.setCreatedBy(
+                                userName
+                        );
 
-                        tasksViewModel.insert(newTask);
+                        newTask.setOwnerId(
+                                ownerId
+                        );
 
-                        ViewPager2 viewPager = findViewById(R.id.viewPager);
+                        newTask.setDueDate(
+                                selectedDueDate[0]
+                        );
 
-// Si estoy en "Hechas", volver a "Por hacer"
+                        tasksViewModel.insert(
+                                newTask
+                        );
+
+                        ViewPager2 viewPager =
+                                findViewById(
+                                        R.id.viewPager
+                                );
+
                         if (viewPager.getCurrentItem() == 1) {
-                            viewPager.setCurrentItem(0, true);
+
+                            viewPager.setCurrentItem(
+                                    0,
+                                    true
+                            );
                         }
 
-                        Log.d(
-                                "TasksActivity",
-                                "🟢 Insertando tarea: "
-                                        + newTask.getTitle()
-                        );
-
                         showCustomToast(
-                                "Tarea agregada por " + userName,
+                                "Tarea agregada por "
+                                        + userName,
                                 R.drawable.enamorado
                         );
+
                     } else {
-                        showCustomToast("El título no puede estar vacío", R.drawable.no);
+
+                        showCustomToast(
+                                "El título no puede estar vacío",
+                                R.drawable.no
+                        );
                     }
                 })
-                .setNegativeButton("Cancelar", null)
+                .setNegativeButton(
+                        "Cancelar",
+                        null
+                )
                 .show();
     }
 
