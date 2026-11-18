@@ -69,13 +69,37 @@ public class FirebaseRepository {
                                 e
                         ));
     }
+    public void sendTaskCompletedNotification(
+            Task task
+    ) {
+
+        Log.d(
+                "COMPLETED_TEST",
+                "Enviando notificación de completado: "
+                        + task.getTitle()
+        );
+
+        createNotification(
+                task.getOwnerId(),
+                "✅ Tarea completada",
+                task.getCreatedBy()
+                        + " completó:\n"
+                        + task.getTitle()
+        );
+    }
     public void saveTask(Task task) {
 
-        if (task.getFirebaseId() == null || task.getFirebaseId().isEmpty()) {
+        boolean isNewTask =
+                task.getFirebaseId() == null
+                        || task.getFirebaseId().isEmpty();
+
+        if (isNewTask) {
+
             Log.d(
                     "SPACE_DEBUG",
                     "[" + task.getTitle() + "]"
             );
+
             String newId = db.collection("tasks")
                     .document()
                     .getId();
@@ -99,13 +123,16 @@ public class FirebaseRepository {
                                     + task.getFirebaseId()
                     );
 
-                    createNotification(
-                            task.getOwnerId(),
-                            "❤️ Nueva tarea",
-                            task.getCreatedBy()
-                                    + " agregó una nueva tarea:\n"
-                                    + task.getTitle()
-                    );
+                    if (isNewTask) {
+
+                        createNotification(
+                                task.getOwnerId(),
+                                "❤️ Nueva tarea",
+                                task.getCreatedBy()
+                                        + " agregó una nueva tarea:\n"
+                                        + task.getTitle()
+                        );
+                    }
 
                     AppDatabase.databaseWriteExecutor.execute(() -> {
 
@@ -129,19 +156,6 @@ public class FirebaseRepository {
                                 e
                         )
                 );
-    }
-
-
-    public void update(Task task) {
-
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-
-            AppDatabase.getInstance(context)
-                    .taskDao()
-                    .insertOrReplace(task);
-
-            saveTask(task);
-        });
     }
 
     public void deleteTask(Task task) {
@@ -229,14 +243,28 @@ public class FirebaseRepository {
     // ==============================
     // FECHAS IMPORTANTES
     // ==============================
+    public void sendImportantDateNotification(
+            ImportantDate date
+    ) {
 
+        createNotification(
+                date.getOwnerId(),
+                "❤️ Nueva fecha importante",
+                date.getCreatedBy()
+                        + " agregó:\n"
+                        + date.getTitle()
+        );
+    }
     public void saveImportantDate(ImportantDate date) {
         Log.d(
                 "DATE_FIREBASE",
                 "ownerId = " + date.getOwnerId()
         );
-        if (date.getFirebaseId() == null ||
-                date.getFirebaseId().isEmpty()) {
+        boolean isNewDate =
+                date.getFirebaseId() == null
+                        || date.getFirebaseId().isEmpty();
+
+        if (isNewDate) {
 
             String newId = db.collection("ImportantDates")
                     .document()
@@ -251,6 +279,13 @@ public class FirebaseRepository {
 
                         Log.d("FirebaseRepo",
                                 "✅ Fecha guardada con ID: " + newId);
+
+                        if (isNewDate) {
+
+                            sendImportantDateNotification(
+                                    date
+                            );
+                        }
 
                         AppDatabase.databaseWriteExecutor.execute(() ->
                                 AppDatabase.getInstance(context)

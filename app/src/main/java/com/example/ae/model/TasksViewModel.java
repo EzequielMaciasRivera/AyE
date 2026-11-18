@@ -114,19 +114,19 @@ public class TasksViewModel extends AndroidViewModel {
 
     public void update(Task task) {
 
-        Log.d(
-                "UPDATE_DEBUG",
-                "Actualizando tarea -> title="
-                        + task.getTitle()
-                        + " firebaseId="
-                        + task.getFirebaseId()
-        );
-
         AppDatabase.databaseWriteExecutor.execute(() -> {
 
             taskDao.insertOrReplace(task);
 
             firebaseRepo.saveTask(task);
+
+            if (task.isCompleted()) {
+
+                firebaseRepo
+                        .sendTaskCompletedNotification(
+                                task
+                        );
+            }
         });
     }
 
