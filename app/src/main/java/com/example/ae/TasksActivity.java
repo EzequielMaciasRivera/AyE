@@ -63,7 +63,15 @@ public class TasksActivity extends AppCompatActivity {
 
         NotificationHelper.createNotificationChannel(this);
 
+        boolean isDark =
+                (getResources().getConfiguration().uiMode
+                        & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                        == android.content.res.Configuration.UI_MODE_NIGHT_YES;
 
+        Log.d(
+                "THEME_TEST",
+                "Modo oscuro = " + isDark
+        );
         // Referencias UI
         TabLayout tabLayout = findViewById(R.id.tabLayout);
         ViewPager2 viewPager = findViewById(R.id.viewPager);
